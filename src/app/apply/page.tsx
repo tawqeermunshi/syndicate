@@ -90,9 +90,16 @@ export default function ApplyPage() {
     try {
       const res = await fetch('/api/apply', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
         body: JSON.stringify(data),
+        redirect: 'manual',
+        cache: 'no-store',
       })
+      if (res.status >= 300 && res.status < 400) {
+        throw new Error(
+          'The app sent a redirect instead of saving your application. Hard-refresh this page (Cmd+Shift+R) and try again.',
+        )
+      }
       const raw = await res.text()
       let message: string | undefined
       if (raw) {

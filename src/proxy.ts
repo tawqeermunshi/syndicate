@@ -5,6 +5,12 @@ import { getPublicOrigin } from '@/lib/siteUrl'
 const PUBLIC_PATHS = ['/', '/apply', '/login', '/auth/callback']
 
 export async function proxy(request: NextRequest) {
+  const pathname = request.nextUrl.pathname
+  // Must run before auth: fetch() follows redirects and would re-POST to /login (405, empty body).
+  if (pathname.startsWith('/api')) {
+    return NextResponse.next({ request })
+  }
+
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
@@ -27,7 +33,6 @@ export async function proxy(request: NextRequest) {
   )
 
   const { data: { user } } = await supabase.auth.getUser()
-  const pathname = request.nextUrl.pathname
 
   const isPublic =
     PUBLIC_PATHS.some(p => pathname === p || pathname.startsWith('/auth'))
@@ -39,10 +44,6 @@ export async function proxy(request: NextRequest) {
   return supabaseResponse
 }
 
-// Do not run auth redirects for /api/* — fetch() would follow 307 to /login and re-POST there (405 + empty body).
-// API routes enforce their own auth. See https://nextjs.org/docs/app/api-reference/file-conventions/proxy#matcher
 export const config = {
-  matcher: [
-    '/((?!api/|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
-  ],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
 }

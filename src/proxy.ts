@@ -4,6 +4,14 @@ import { getPublicOrigin } from '@/lib/siteUrl'
 
 const PUBLIC_PATHS = ['/', '/apply', '/login', '/auth/callback']
 
+/** Anonymous users need these API routes (forms, invite checks before sign-in). */
+function isPublicApi(pathname: string) {
+  return (
+    pathname === '/api/apply'
+    || pathname.startsWith('/api/invite/')
+  )
+}
+
 export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
@@ -29,7 +37,9 @@ export async function proxy(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   const pathname = request.nextUrl.pathname
 
-  const isPublic = PUBLIC_PATHS.some(p => pathname === p || pathname.startsWith('/auth'))
+  const isPublic =
+    PUBLIC_PATHS.some(p => pathname === p || pathname.startsWith('/auth'))
+    || isPublicApi(pathname)
 
   if (!user && !isPublic) {
     return NextResponse.redirect(new URL('/login', getPublicOrigin(request)))

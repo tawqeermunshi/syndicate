@@ -93,9 +93,18 @@ export default function ApplyPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       })
+      const raw = await res.text()
+      let message: string | undefined
+      if (raw) {
+        try {
+          const body = JSON.parse(raw) as { error?: string }
+          message = body.error
+        } catch {
+          message = undefined
+        }
+      }
       if (!res.ok) {
-        const body = await res.json()
-        throw new Error(body.error || 'Something went wrong')
+        throw new Error(message || `Request failed (${res.status})`)
       }
       setSubmitted(true)
     } catch (err) {

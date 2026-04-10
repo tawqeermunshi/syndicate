@@ -4,14 +4,6 @@ import { getPublicOrigin } from '@/lib/siteUrl'
 
 const PUBLIC_PATHS = ['/', '/apply', '/login', '/auth/callback']
 
-/** Anonymous users need these API routes (forms, invite checks before sign-in). */
-function isPublicApi(pathname: string) {
-  return (
-    pathname === '/api/apply'
-    || pathname.startsWith('/api/invite/')
-  )
-}
-
 export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
@@ -39,7 +31,6 @@ export async function proxy(request: NextRequest) {
 
   const isPublic =
     PUBLIC_PATHS.some(p => pathname === p || pathname.startsWith('/auth'))
-    || isPublicApi(pathname)
 
   if (!user && !isPublic) {
     return NextResponse.redirect(new URL('/login', getPublicOrigin(request)))
@@ -48,6 +39,10 @@ export async function proxy(request: NextRequest) {
   return supabaseResponse
 }
 
+// Do not run auth redirects for /api/* — fetch() would follow 307 to /login and re-POST there (405 + empty body).
+// API routes enforce their own auth. See https://nextjs.org/docs/app/api-reference/file-conventions/proxy#matcher
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
+  matcher: [
+    '/((?!api/|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+  ],
 }

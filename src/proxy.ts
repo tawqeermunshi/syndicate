@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { getPublicOrigin } from '@/lib/siteUrl'
 
 const PUBLIC_PATHS = ['/', '/apply', '/login', '/auth/callback']
 
@@ -31,7 +32,7 @@ export async function proxy(request: NextRequest) {
   const isPublic = PUBLIC_PATHS.some(p => pathname === p || pathname.startsWith('/auth'))
 
   if (!user && !isPublic) {
-    return NextResponse.redirect(new URL('/login', request.url))
+    return NextResponse.redirect(new URL('/login', getPublicOrigin(request)))
   }
 
   return supabaseResponse

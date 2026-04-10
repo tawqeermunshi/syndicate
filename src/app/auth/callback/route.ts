@@ -1,14 +1,16 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { getPublicOrigin } from '@/lib/siteUrl'
 
 export async function GET(request: NextRequest) {
+  const origin = getPublicOrigin(request)
   const url = new URL(request.url)
   const code = url.searchParams.get('code')
   const inviteCode = url.searchParams.get('invite')
 
   if (code) {
     // Create the response up front so cookies can be set directly on it
-    const response = NextResponse.redirect(new URL('/login', request.url))
+    const response = NextResponse.redirect(new URL('/login', origin))
 
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -46,10 +48,10 @@ export async function GET(request: NextRequest) {
         destination = '/pending'
       }
 
-      response.headers.set('location', new URL(destination, request.url).toString())
+      response.headers.set('location', new URL(destination, origin).toString())
       return response
     }
   }
 
-  return NextResponse.redirect(new URL('/login', request.url))
+  return NextResponse.redirect(new URL('/login', origin))
 }

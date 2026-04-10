@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { isAdmin } from '@/lib/admin'
+import { resolveAppBaseUrl } from '@/lib/siteUrl'
 import { NextResponse } from 'next/server'
 
 export async function POST(request: Request) {
@@ -23,7 +24,7 @@ export async function POST(request: Request) {
   // On approval: create the user account + profile + generate login link
   if (decision === 'approved') {
     const admin = createAdminClient()
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+    const appUrl = resolveAppBaseUrl()
 
     // 1. Create auth user (email confirmed, no verification email sent)
     const { data: created, error: createError } = await admin.auth.admin.createUser({

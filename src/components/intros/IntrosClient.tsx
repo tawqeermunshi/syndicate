@@ -1,7 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { useMemo } from 'react'
+import { usePathname } from 'next/navigation'
+import { startTransition, useEffect, useMemo, useState } from 'react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -53,44 +54,58 @@ export default function IntrosClient({
   initialOutgoing: IntroRecord[]
   currentUserId: string
 }) {
-  const { incoming, outgoing } = useMemo(() => {
+  const pathname = usePathname()
+  const [demoIncoming, setDemoIncoming] = useState<IntroRecord[]>([])
+  const [demoOutgoing, setDemoOutgoing] = useState<IntroRecord[]>([])
+
+  // localStorage is empty on the server; reading it during render causes hydration mismatch
+  // and outgoing demo intros never show. Load after mount and when returning to this page.
+  useEffect(() => {
     const demo = getDemoIntroRequests()
     const profileMap = mapById()
 
-    const demoIncoming = demo
-      .filter((r) => r.to_user_id === currentUserId)
-      .map((r) => {
-        const from = profileMap.get(r.from_user_id)
-        return {
-          ...r,
-          from_user: from
-            ? {
-                username: from.username,
-                full_name: from.full_name,
-                avatar_url: from.avatar_url,
-                company: from.company || from.fund_name,
-              }
-            : undefined,
-        }
-      }) as IntroRecord[]
+    startTransition(() => {
+      setDemoIncoming(
+        demo
+          .filter((r) => r.to_user_id === currentUserId)
+          .map((r) => {
+            const from = profileMap.get(r.from_user_id)
+            return {
+              ...r,
+              from_user: from
+                ? {
+                    username: from.username,
+                    full_name: from.full_name,
+                    avatar_url: from.avatar_url,
+                    company: from.company || from.fund_name,
+                  }
+                : undefined,
+            }
+          }) as IntroRecord[],
+      )
 
-    const demoOutgoing = demo
-      .filter((r) => r.from_user_id === currentUserId)
-      .map((r) => {
-        const to = profileMap.get(r.to_user_id)
-        return {
-          ...r,
-          to_user: to
-            ? {
-                username: to.username,
-                full_name: to.full_name,
-                avatar_url: to.avatar_url,
-                company: to.company || to.fund_name,
-              }
-            : undefined,
-        }
-      }) as IntroRecord[]
+      setDemoOutgoing(
+        demo
+          .filter((r) => r.from_user_id === currentUserId)
+          .map((r) => {
+            const to = profileMap.get(r.to_user_id)
+            return {
+              ...r,
+              to_user: to
+                ? {
+                    username: to.username,
+                    full_name: to.full_name,
+                    avatar_url: to.avatar_url,
+                    company: to.company || to.fund_name,
+                  }
+                : undefined,
+            }
+          }) as IntroRecord[],
+      )
+    })
+  }, [currentUserId, pathname])
 
+  const { incoming, outgoing } = useMemo(() => {
     return {
       incoming: [...demoIncoming, ...initialIncoming].sort(
         (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
@@ -99,7 +114,7 @@ export default function IntrosClient({
         (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       ),
     }
-  }, [initialIncoming, initialOutgoing, currentUserId])
+  }, [demoIncoming, demoOutgoing, initialIncoming, initialOutgoing])
 
   const pendingCount = incoming.filter((r) => r.status === 'pending').length
 

@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Users, FileText, Ticket, LayoutDashboard, ExternalLink } from 'lucide-react'
-import MafiaLogo from '@/components/brand/MafiaLogo'
+import NexusLogo from '@/components/brand/NexusLogo'
 
 const NAV = [
   { href: '/admin', label: 'Overview', icon: LayoutDashboard, exact: true },
@@ -18,7 +18,7 @@ export default function AdminNav() {
     <aside className="fixed left-0 top-0 h-screen w-56 border-r border-white/10 flex flex-col bg-black">
       <div className="px-5 py-6 border-b border-white/10">
         <div className="mb-2">
-          <MafiaLogo size="sm" muted />
+          <NexusLogo size="sm" muted />
         </div>
         <p className="text-sm font-semibold">Admin</p>
       </div>

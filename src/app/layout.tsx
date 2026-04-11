@@ -19,9 +19,9 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: "Mafia",
+  title: "Nexus",
   description:
-    "Mafia is a private, invite-only circle for founders, investors, and operators who ship real work — signal over noise.",
+    "Nexus is a private, invite-only network for founders, investors, and operators who ship real work — signal over noise.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

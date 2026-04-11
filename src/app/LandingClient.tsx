@@ -3,7 +3,7 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import MafiaLogo from '@/components/brand/MafiaLogo'
+import NexusLogo from '@/components/brand/NexusLogo'
 
 const ROTATING_WORDS = ['Founders', 'Investors', 'Operators', 'Builders']
 
@@ -87,7 +87,7 @@ export default function LandingClient() {
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.7 }}
         style={{ position: 'absolute', top: 32, left: 32 }}>
-        <MafiaLogo muted />
+        <NexusLogo muted />
       </motion.div>
 
       {/* ── Main content ── */}

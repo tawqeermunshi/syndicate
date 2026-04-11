@@ -80,10 +80,17 @@ export default function Sidebar({ profile }: { profile: Profile }) {
         )}
         <Link href="/settings"
           className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-200"
-          style={{ color: 'rgba(255,255,255,0.3)', border: '1px solid transparent' }}
-          onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.6)')}
-          onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.3)')}>
-          <Settings size={15} strokeWidth={1.5} />
+          style={pathname === '/settings'
+            ? { background: 'rgba(139,92,246,0.15)', color: '#c4b5fd', border: '1px solid rgba(139,92,246,0.25)' }
+            : { color: 'rgba(255,255,255,0.3)', border: '1px solid transparent' }
+          }
+          onMouseEnter={e => {
+            if (pathname !== '/settings') e.currentTarget.style.color = 'rgba(255,255,255,0.6)'
+          }}
+          onMouseLeave={e => {
+            if (pathname !== '/settings') e.currentTarget.style.color = 'rgba(255,255,255,0.3)'
+          }}>
+          <Settings size={15} strokeWidth={pathname === '/settings' ? 2.5 : 1.5} />
           Settings
         </Link>
         <button onClick={signOut}

@@ -29,6 +29,8 @@ function LoginInner() {
   const [oauthLoading, setOauthLoading] = useState(false)
   const [error, setError] = useState('')
   const inviteParamAttempted = useRef<string | null>(null)
+  /** Invite UI is only for pre-approved signup — not part of member sign-in. */
+  const [showInviteJoin, setShowInviteJoin] = useState(false)
 
   const verifyInvite = useCallback(async (codeRaw: string) => {
     const code = codeRaw.trim()
@@ -66,9 +68,16 @@ function LoginInner() {
   }, [])
 
   useEffect(() => {
+    const join = searchParams.get('join')
+    const inv = searchParams.get('invite')?.trim()
+    if (join === 'invite' || inv) setShowInviteJoin(true)
+  }, [searchParams])
+
+  useEffect(() => {
     const q = searchParams.get('invite')?.trim()
     if (!q || inviteParamAttempted.current === q) return
     inviteParamAttempted.current = q
+    setShowInviteJoin(true)
     setInviteCode(q)
     void verifyInvite(q)
   }, [searchParams, verifyInvite])
@@ -80,12 +89,20 @@ function LoginInner() {
     setJoinError('')
   }
 
-  function authCallbackUrl() {
-    const origin = window.location.origin
-    if (verifiedInvite) {
-      return `${origin}/auth/callback?invite=${encodeURIComponent(verifiedInvite)}`
-    }
-    return `${origin}/auth/callback`
+  function memberOAuthRedirect() {
+    return `${window.location.origin}/auth/callback`
+  }
+
+  function inviteOAuthRedirect(invite: string) {
+    return `${window.location.origin}/auth/callback?invite=${encodeURIComponent(invite)}`
+  }
+
+  function closeInviteJoin() {
+    inviteParamAttempted.current = null
+    setShowInviteJoin(false)
+    clearInvite()
+    setInviteCode('')
+    router.replace('/login')
   }
 
   async function handlePassword(e: React.FormEvent) {
@@ -101,9 +118,7 @@ function LoginInner() {
     }
     const { data: profile } = await supabase.from('profiles').select('status').eq('id', data.user.id).single()
     if (!profile) {
-      router.push(
-        verifiedInvite ? `/onboarding?invite=${encodeURIComponent(verifiedInvite)}` : '/onboarding',
-      )
+      router.push('/onboarding')
     } else if (profile.status === 'approved') {
       router.push('/feed')
     } else {
@@ -117,10 +132,25 @@ function LoginInner() {
     const supabase = createClient()
     const { error: oErr } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: authCallbackUrl() },
+      options: { redirectTo: memberOAuthRedirect() },
     })
     if (oErr) {
       setError(oErr.message)
+      setOauthLoading(false)
+    }
+  }
+
+  async function handleGoogleInvite() {
+    if (!verifiedInvite) return
+    setOauthLoading(true)
+    setJoinError('')
+    const supabase = createClient()
+    const { error: oErr } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: inviteOAuthRedirect(verifiedInvite) },
+    })
+    if (oErr) {
+      setJoinError(oErr.message)
       setOauthLoading(false)
     }
   }
@@ -144,7 +174,7 @@ function LoginInner() {
       email: joinEmail.trim(),
       password: joinPassword,
       options: {
-        emailRedirectTo: authCallbackUrl(),
+        emailRedirectTo: inviteOAuthRedirect(verifiedInvite),
       },
     })
     if (upErr) {
@@ -200,136 +230,9 @@ function LoginInner() {
             <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '1.75rem', fontWeight: 700, color: 'var(--text)', marginBottom: '0.4rem', letterSpacing: '-0.03em' }}>
               Sign in
             </h1>
-            <p style={{ fontSize: '0.83rem', color: 'var(--text3)', marginBottom: '1.5rem' }}>
-              Have an invite code? Verify it below to create your account — no application required.
-              {' '}
-              Otherwise{' '}
-              <Link href="/apply" style={{ color: 'rgba(167,139,250,0.8)', textDecoration: 'underline', textUnderlineOffset: '3px' }}>
-                apply for access
-              </Link>
-              .
+            <p style={{ fontSize: '0.83rem', color: 'var(--text3)', marginBottom: '1.35rem', lineHeight: 1.55 }}>
+              Use your email and password, or Google. Invite codes are only for creating a new account with pre-approval — not for signing in.
             </p>
-
-            {/* Invite */}
-            <div style={{ marginBottom: '1.25rem', padding: '1rem', borderRadius: '14px', border: '1px solid rgba(139,92,246,0.2)', background: 'rgba(139,92,246,0.06)' }}>
-              <p style={{ fontSize: '0.7rem', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(196,181,253,0.7)', marginBottom: '0.65rem' }}>
-                Invite code
-              </p>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <StyledInput
-                  type="text"
-                  autoComplete="off"
-                  spellCheck={false}
-                  value={inviteCode}
-                  onChange={(e) => {
-                    setInviteCode(e.target.value.toUpperCase())
-                    if (verifiedInvite) clearInvite()
-                  }}
-                  placeholder="e.g. ABCD12"
-                  disabled={!!verifiedInvite}
-                  style={{ flex: 1, fontFamily: 'ui-monospace, monospace', letterSpacing: '0.06em' }}
-                />
-                {!verifiedInvite ? (
-                  <motion.button
-                    type="button"
-                    disabled={verifyLoading || !inviteCode.trim()}
-                    onClick={() => void verifyInvite(inviteCode)}
-                    whileTap={{ scale: 0.97 }}
-                    style={{
-                      padding: '0 14px', borderRadius: '10px', fontSize: '0.8rem', fontWeight: 600,
-                      background: 'rgba(255,255,255,0.1)', color: '#e9e7ef', border: '1px solid rgba(255,255,255,0.12)',
-                      cursor: verifyLoading || !inviteCode.trim() ? 'not-allowed' : 'pointer', opacity: verifyLoading || !inviteCode.trim() ? 0.45 : 1,
-                      whiteSpace: 'nowrap',
-                    }}>
-                    {verifyLoading ? '…' : 'Verify'}
-                  </motion.button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={clearInvite}
-                    style={{
-                      padding: '0 12px', borderRadius: '10px', fontSize: '0.75rem',
-                      background: 'transparent', color: 'rgba(248,113,113,0.85)', border: '1px solid rgba(248,113,113,0.25)',
-                      cursor: 'pointer', whiteSpace: 'nowrap',
-                    }}>
-                    Change
-                  </button>
-                )}
-              </div>
-              {verifyError && <p style={{ color: '#f87171', fontSize: '0.75rem', marginTop: '8px' }}>{verifyError}</p>}
-              {verifiedInvite && (
-                <p style={{ color: 'rgba(52,211,153,0.9)', fontSize: '0.78rem', marginTop: '8px' }}>
-                  Code accepted — create your account with Google or email, then complete your profile.
-                </p>
-              )}
-            </div>
-
-            {verifiedInvite && (
-              <>
-                <form onSubmit={handleSignUp} style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '1.25rem' }}>
-                  <p style={{ fontSize: '0.78rem', color: 'var(--text3)' }}>Create account</p>
-                  <StyledInput
-                    type="email"
-                    required
-                    autoComplete="email"
-                    value={joinEmail}
-                    onChange={(e) => setJoinEmail(e.target.value)}
-                    placeholder="Work email"
-                  />
-                  <StyledInput
-                    type="password"
-                    required
-                    autoComplete="new-password"
-                    value={joinPassword}
-                    onChange={(e) => setJoinPassword(e.target.value)}
-                    placeholder="Password (8+ characters)"
-                  />
-                  <StyledInput
-                    type="password"
-                    required
-                    autoComplete="new-password"
-                    value={joinConfirm}
-                    onChange={(e) => setJoinConfirm(e.target.value)}
-                    placeholder="Confirm password"
-                  />
-                  {joinError && <p style={{ color: '#f87171', fontSize: '0.78rem' }}>{joinError}</p>}
-                  {joinSuccess && <p style={{ color: 'rgba(52,211,153,0.85)', fontSize: '0.78rem' }}>{joinSuccess}</p>}
-                  <GradientButton loading={joinLoading}>
-                    {joinLoading ? 'Creating account…' : 'Create account'}
-                  </GradientButton>
-                </form>
-
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', margin: '0 0 1.25rem' }}>
-                  <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.07)' }} />
-                  <span style={{ fontSize: '0.72rem', color: 'var(--text3)', letterSpacing: '0.06em' }}>OR</span>
-                  <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.07)' }} />
-                </div>
-
-                <motion.button
-                  type="button"
-                  onClick={() => void handleGoogle()}
-                  disabled={oauthLoading}
-                  whileHover={{ scale: 1.02, y: -1 }}
-                  whileTap={{ scale: 0.97 }}
-                  style={{
-                    width: '100%', height: '44px', borderRadius: '10px', marginBottom: '1.25rem',
-                    background: '#fff', color: '#0c0a14',
-                    fontSize: '0.88rem', fontWeight: 600,
-                    border: 'none', cursor: oauthLoading ? 'not-allowed' : 'pointer',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
-                    opacity: oauthLoading ? 0.6 : 1,
-                  }}>
-                  <GoogleIcon />
-                  Continue with Google
-                </motion.button>
-              </>
-            )}
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', margin: '0 0 1rem' }}>
-              <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.07)' }} />
-              <span style={{ fontSize: '0.72rem', color: 'var(--text3)', letterSpacing: '0.06em' }}>MEMBERS</span>
-              <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.07)' }} />
-            </div>
 
             <form onSubmit={handlePassword} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <StyledInput
@@ -354,32 +257,185 @@ function LoginInner() {
               </GradientButton>
             </form>
 
-            {!verifiedInvite && (
-              <>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', margin: '1.25rem 0' }}>
-                  <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.07)' }} />
-                  <span style={{ fontSize: '0.72rem', color: 'var(--text3)', letterSpacing: '0.06em' }}>OR</span>
-                  <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.07)' }} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', margin: '1.1rem 0' }}>
+              <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.07)' }} />
+              <span style={{ fontSize: '0.72rem', color: 'var(--text3)', letterSpacing: '0.06em' }}>OR</span>
+              <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.07)' }} />
+            </div>
+
+            <motion.button
+              type="button"
+              onClick={() => void handleGoogle()}
+              disabled={oauthLoading}
+              whileHover={{ scale: 1.02, y: -1 }}
+              whileTap={{ scale: 0.97 }}
+              style={{
+                width: '100%', height: '44px', borderRadius: '10px',
+                background: '#fff', color: '#0c0a14',
+                fontSize: '0.88rem', fontWeight: 600,
+                border: 'none', cursor: oauthLoading ? 'not-allowed' : 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
+                opacity: oauthLoading ? 0.6 : 1,
+              }}>
+              <GoogleIcon />
+              Continue with Google
+            </motion.button>
+
+            <p style={{ fontSize: '0.78rem', color: 'var(--text3)', textAlign: 'center', marginTop: '1.2rem', lineHeight: 1.55 }}>
+              New here?{' '}
+              <Link href="/apply" style={{ color: 'rgba(167,139,250,0.85)', textDecoration: 'underline', textUnderlineOffset: '3px' }}>
+                Apply for access
+              </Link>
+              {!showInviteJoin ? (
+                <>
+                  {' · '}
+                  <Link href="/login?join=invite" style={{ color: 'rgba(167,139,250,0.85)', textDecoration: 'underline', textUnderlineOffset: '3px' }}>
+                    Join with an invite code
+                  </Link>
+                </>
+              ) : null}
+            </p>
+
+            {showInviteJoin && (
+              <div style={{ marginTop: '1.35rem', paddingTop: '1.25rem', borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', marginBottom: '0.9rem' }}>
+                  <div>
+                    <p style={{ fontSize: '0.65rem', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(196,181,253,0.65)', margin: '0 0 4px' }}>
+                      Pre-approved
+                    </p>
+                    <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.05rem', fontWeight: 600, color: 'var(--text2)', margin: 0, letterSpacing: '-0.02em' }}>
+                      Join with an invite
+                    </h2>
+                    <p style={{ fontSize: '0.76rem', color: 'var(--text3)', margin: '6px 0 0', lineHeight: 1.45 }}>
+                      Your code skips the application queue. You still create a normal account and complete onboarding like everyone else.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => closeInviteJoin()}
+                    style={{
+                      flexShrink: 0, padding: '4px 10px', borderRadius: '8px', fontSize: '0.72rem', fontWeight: 500,
+                      background: 'transparent', color: 'var(--text3)', border: '1px solid rgba(255,255,255,0.1)',
+                      cursor: 'pointer',
+                    }}>
+                    Close
+                  </button>
                 </div>
 
-                <motion.button
-                  type="button"
-                  onClick={() => void handleGoogle()}
-                  disabled={oauthLoading}
-                  whileHover={{ scale: 1.02, y: -1 }}
-                  whileTap={{ scale: 0.97 }}
-                  style={{
-                    width: '100%', height: '44px', borderRadius: '10px',
-                    background: '#fff', color: '#0c0a14',
-                    fontSize: '0.88rem', fontWeight: 600,
-                    border: 'none', cursor: oauthLoading ? 'not-allowed' : 'pointer',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
-                    opacity: oauthLoading ? 0.6 : 1,
-                  }}>
-                  <GoogleIcon />
-                  Continue with Google
-                </motion.button>
-              </>
+                <div style={{ marginBottom: verifiedInvite ? '1rem' : 0, padding: '0.9rem', borderRadius: '14px', border: '1px solid rgba(139,92,246,0.2)', background: 'rgba(139,92,246,0.06)' }}>
+                  <p style={{ fontSize: '0.7rem', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(196,181,253,0.7)', marginBottom: '0.6rem' }}>
+                    Invite code
+                  </p>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <StyledInput
+                      type="text"
+                      autoComplete="off"
+                      spellCheck={false}
+                      value={inviteCode}
+                      onChange={(e) => {
+                        setInviteCode(e.target.value.toUpperCase())
+                        if (verifiedInvite) clearInvite()
+                      }}
+                      placeholder="e.g. ABCD12"
+                      disabled={!!verifiedInvite}
+                      style={{ flex: 1, fontFamily: 'ui-monospace, monospace', letterSpacing: '0.06em' }}
+                    />
+                    {!verifiedInvite ? (
+                      <motion.button
+                        type="button"
+                        disabled={verifyLoading || !inviteCode.trim()}
+                        onClick={() => void verifyInvite(inviteCode)}
+                        whileTap={{ scale: 0.97 }}
+                        style={{
+                          padding: '0 14px', borderRadius: '10px', fontSize: '0.8rem', fontWeight: 600,
+                          background: 'rgba(255,255,255,0.1)', color: '#e9e7ef', border: '1px solid rgba(255,255,255,0.12)',
+                          cursor: verifyLoading || !inviteCode.trim() ? 'not-allowed' : 'pointer', opacity: verifyLoading || !inviteCode.trim() ? 0.45 : 1,
+                          whiteSpace: 'nowrap',
+                        }}>
+                        {verifyLoading ? '…' : 'Verify'}
+                      </motion.button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={clearInvite}
+                        style={{
+                          padding: '0 12px', borderRadius: '10px', fontSize: '0.75rem',
+                          background: 'transparent', color: 'rgba(248,113,113,0.85)', border: '1px solid rgba(248,113,113,0.25)',
+                          cursor: 'pointer', whiteSpace: 'nowrap',
+                        }}>
+                        Change
+                      </button>
+                    )}
+                  </div>
+                  {verifyError && <p style={{ color: '#f87171', fontSize: '0.75rem', marginTop: '8px' }}>{verifyError}</p>}
+                  {verifiedInvite && (
+                    <p style={{ color: 'rgba(52,211,153,0.9)', fontSize: '0.78rem', marginTop: '8px' }}>
+                      Code accepted — create your account below, then you will finish your profile.
+                    </p>
+                  )}
+                </div>
+
+                {verifiedInvite && (
+                  <>
+                    <form onSubmit={handleSignUp} style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '1rem' }}>
+                      <p style={{ fontSize: '0.78rem', color: 'var(--text3)' }}>Create account</p>
+                      <StyledInput
+                        type="email"
+                        required
+                        autoComplete="email"
+                        value={joinEmail}
+                        onChange={(e) => setJoinEmail(e.target.value)}
+                        placeholder="Work email"
+                      />
+                      <StyledInput
+                        type="password"
+                        required
+                        autoComplete="new-password"
+                        value={joinPassword}
+                        onChange={(e) => setJoinPassword(e.target.value)}
+                        placeholder="Password (8+ characters)"
+                      />
+                      <StyledInput
+                        type="password"
+                        required
+                        autoComplete="new-password"
+                        value={joinConfirm}
+                        onChange={(e) => setJoinConfirm(e.target.value)}
+                        placeholder="Confirm password"
+                      />
+                      {joinError && <p style={{ color: '#f87171', fontSize: '0.78rem' }}>{joinError}</p>}
+                      {joinSuccess && <p style={{ color: 'rgba(52,211,153,0.85)', fontSize: '0.78rem' }}>{joinSuccess}</p>}
+                      <GradientButton loading={joinLoading}>
+                        {joinLoading ? 'Creating account…' : 'Create account'}
+                      </GradientButton>
+                    </form>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', margin: '0 0 1rem' }}>
+                      <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.07)' }} />
+                      <span style={{ fontSize: '0.72rem', color: 'var(--text3)', letterSpacing: '0.06em' }}>OR</span>
+                      <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.07)' }} />
+                    </div>
+
+                    <motion.button
+                      type="button"
+                      onClick={() => void handleGoogleInvite()}
+                      disabled={oauthLoading}
+                      whileHover={{ scale: 1.02, y: -1 }}
+                      whileTap={{ scale: 0.97 }}
+                      style={{
+                        width: '100%', height: '44px', borderRadius: '10px',
+                        background: '#fff', color: '#0c0a14',
+                        fontSize: '0.88rem', fontWeight: 600,
+                        border: 'none', cursor: oauthLoading ? 'not-allowed' : 'pointer',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
+                        opacity: oauthLoading ? 0.6 : 1,
+                      }}>
+                      <GoogleIcon />
+                      Continue with Google
+                    </motion.button>
+                  </>
+                )}
+              </div>
             )}
           </div>
         </motion.div>

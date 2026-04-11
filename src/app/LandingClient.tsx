@@ -187,11 +187,18 @@ export default function LandingClient() {
             </motion.div>
           </Link>
 
-          <Link href="/login" style={{ fontSize: '0.83rem', color: 'var(--text3)', textDecoration: 'none' }}
-            onMouseEnter={e => (e.currentTarget.style.color = 'var(--text2)')}
-            onMouseLeave={e => (e.currentTarget.style.color = 'var(--text3)')}>
-            Already a member? Sign in
-          </Link>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+            <Link href="/login" style={{ fontSize: '0.83rem', color: 'var(--text3)', textDecoration: 'none' }}
+              onMouseEnter={e => (e.currentTarget.style.color = 'var(--text2)')}
+              onMouseLeave={e => (e.currentTarget.style.color = 'var(--text3)')}>
+              Already a member? Sign in
+            </Link>
+            <Link href="/login" style={{ fontSize: '0.8rem', color: 'rgba(167,139,250,0.65)', textDecoration: 'none' }}
+              onMouseEnter={e => (e.currentTarget.style.color = 'rgba(167,139,250,0.9)')}
+              onMouseLeave={e => (e.currentTarget.style.color = 'rgba(167,139,250,0.65)')}>
+              Have an invite code? Join without applying →
+            </Link>
+          </div>
         </motion.div>
       </div>
 

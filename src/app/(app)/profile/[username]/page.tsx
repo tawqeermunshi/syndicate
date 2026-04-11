@@ -77,6 +77,11 @@ export default async function ProfilePage({
                 <Badge variant="outline" className="text-xs border-white/20 text-white/50">
                   {ROLE_LABELS[profile.role as keyof typeof ROLE_LABELS]}
                 </Badge>
+                {isDemoProfile && (
+                  <Badge variant="outline" className="text-[10px] uppercase tracking-wider border-amber-500/35 text-amber-400/90">
+                    Demo
+                  </Badge>
+                )}
                 {profile.company && (
                   <span className="flex items-center gap-1 text-white/50 text-xs">
                     <Building2 size={12} />

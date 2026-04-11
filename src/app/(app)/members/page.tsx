@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { MapPin, Building2 } from 'lucide-react'
-import { DEMO_PROFILES } from '@/lib/demoProfiles'
+import { DEMO_PROFILES, isDemoUsername } from '@/lib/demoProfiles'
 
 const ROLE_LABELS = { founder: 'Founder', vc: 'VC', operator: 'Operator', angel: 'Angel' }
 const ROLE_COLORS = {
@@ -35,8 +35,7 @@ export default async function MembersPage({
   const roles = ['', 'founder', 'vc', 'operator', 'angel']
   const roleLabels = { '': 'All', founder: 'Founders', vc: 'Investors', operator: 'Operators', angel: 'Angels' }
 
-  const demoUsernames = new Set(DEMO_PROFILES.map(p => p.username))
-  const mergedMembers = [...DEMO_PROFILES, ...(members || []).filter(m => !demoUsernames.has(m.username))]
+  const mergedMembers = [...DEMO_PROFILES, ...(members || []).filter(m => !isDemoUsername(m.username))]
     .filter(m => !role || m.role === role)
 
   return (
@@ -77,11 +76,16 @@ export default async function MembersPage({
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
                   <span className="font-medium text-sm group-hover:underline truncate">{member.full_name}</span>
                   <Badge variant="outline" className={`text-xs border shrink-0 ${ROLE_COLORS[member.role as keyof typeof ROLE_COLORS]}`}>
                     {ROLE_LABELS[member.role as keyof typeof ROLE_LABELS]}
                   </Badge>
+                  {isDemoUsername(member.username) && (
+                    <Badge variant="outline" className="text-[10px] uppercase tracking-wider border-amber-500/35 text-amber-400/90 shrink-0">
+                      Demo
+                    </Badge>
+                  )}
                 </div>
 
                 {member.headline && (

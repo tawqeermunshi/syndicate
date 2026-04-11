@@ -320,6 +320,10 @@ create policy "approved members create comments"
     exists (select 1 from profiles p where p.id = auth.uid() and p.status = 'approved')
   );
 
+create policy "authors delete own comments"
+  on comments for delete
+  using (auth.uid() = author_id);
+
 -- Reactions
 create policy "approved members manage reactions"
   on reactions for all

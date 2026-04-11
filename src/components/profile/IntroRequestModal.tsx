@@ -10,6 +10,8 @@ import type { Profile } from '@/types'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { saveDemoIntroRequest } from '@/lib/demoIntros'
+import { isDemoProfileId } from '@/lib/demoProfiles'
+import { Badge } from '@/components/ui/badge'
 
 export default function IntroRequestModal({ toProfile }: { toProfile: Profile }) {
   const [open, setOpen] = useState(false)
@@ -57,13 +59,20 @@ export default function IntroRequestModal({ toProfile }: { toProfile: Profile })
       </DialogTrigger>
       <DialogContent className="bg-zinc-950 border-white/10 text-white max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-white">Request an intro call</DialogTitle>
+          <div className="flex items-center gap-2 flex-wrap">
+            <DialogTitle className="text-white">Request an intro call</DialogTitle>
+            {isDemoProfileId(toProfile.id) && (
+              <Badge variant="outline" className="text-[10px] uppercase tracking-wider border-amber-500/35 text-amber-400/90">
+                Demo
+              </Badge>
+            )}
+          </div>
           <p className="text-white/40 text-sm">with {toProfile.full_name}</p>
         </DialogHeader>
 
         {sent ? (
           <div className="py-8 text-center">
-            <p className="text-white/70">Intro request sent. They'll be notified.</p>
+            <p className="text-white/70">Intro request sent. They&apos;ll be notified.</p>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4 mt-2">

@@ -10,6 +10,8 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { formatDistanceToNow } from '@/lib/utils'
 import { motion } from 'framer-motion'
+import { Badge } from '@/components/ui/badge'
+import { isDemoProfileId } from '@/lib/demoProfiles'
 
 const CATEGORY_STYLES: Record<string, { label: string; color: string; bg: string; border: string }> = {
   building:        { label: 'Building',        color: '#60a5fa', bg: 'rgba(96,165,250,0.08)',   border: 'rgba(96,165,250,0.2)' },
@@ -37,11 +39,13 @@ export default function PostCard({ post, currentUserId }: { post: Post; currentU
   const [commentsLoaded, setCommentsLoaded] = useState(false)
   const [loadingComments, setLoadingComments] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [commentActionError, setCommentActionError] = useState('')
   const router = useRouter()
 
   const cat = CATEGORY_STYLES[post.category] || { label: post.category, color: '#9ca3af', bg: 'transparent', border: 'rgba(255,255,255,0.1)' }
   const isOwn = post.author_id === currentUserId
   const author = post.author
+  const authorIsDemo = post.author_id ? isDemoProfileId(post.author_id) : false
 
   async function toggleReaction() {
     const supabase = createClient()
@@ -86,6 +90,7 @@ export default function PostCard({ post, currentUserId }: { post: Post; currentU
 
   async function handleToggleComments() {
     const next = !showComments
+    setCommentActionError('')
     setShowComments(next)
     if (next && !commentsLoaded) {
       await loadComments()
@@ -93,8 +98,13 @@ export default function PostCard({ post, currentUserId }: { post: Post; currentU
   }
 
   async function deleteComment(commentId: string) {
+    setCommentActionError('')
     const supabase = createClient()
-    await supabase.from('comments').delete().eq('id', commentId)
+    const { error } = await supabase.from('comments').delete().eq('id', commentId)
+    if (error) {
+      setCommentActionError(error.message || 'Could not delete comment')
+      return
+    }
     setComments((prev) => prev.filter((c) => c.id !== commentId))
     router.refresh()
   }
@@ -125,7 +135,7 @@ export default function PostCard({ post, currentUserId }: { post: Post; currentU
             </Avatar>
           </Link>
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <Link href={`/profile/${author?.username}`}
                 className="text-sm font-semibold transition-colors"
                 style={{ color: 'rgba(255,255,255,0.85)' }}
@@ -133,6 +143,11 @@ export default function PostCard({ post, currentUserId }: { post: Post; currentU
                 onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.85)')}>
                 {author?.full_name}
               </Link>
+              {authorIsDemo && (
+                <Badge variant="outline" className="text-[10px] uppercase tracking-wider border-amber-500/35 text-amber-400/90 px-1.5 py-0">
+                  Demo
+                </Badge>
+              )}
               {author?.company && (
                 <span className="text-xs" style={{ color: 'rgba(255,255,255,0.25)' }}>{author.company}</span>
               )}
@@ -202,6 +217,9 @@ export default function PostCard({ post, currentUserId }: { post: Post; currentU
           animate={{ opacity: 1, height: 'auto' }}
           className="mt-4 pt-4"
           style={{ borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+          {commentActionError && (
+            <p className="text-xs text-red-300/90 mb-2">{commentActionError}</p>
+          )}
           {loadingComments ? (
             <p className="text-xs text-white/40 mb-3">Loading comments...</p>
           ) : comments.length > 0 ? (

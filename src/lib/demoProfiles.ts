@@ -101,6 +101,17 @@ export const DEMO_PROFILES: Profile[] = [
   },
 ]
 
+const DEMO_IDS = new Set(DEMO_PROFILES.map((p) => p.id))
+const DEMO_USERNAMES = new Set(DEMO_PROFILES.map((p) => p.username))
+
+export function isDemoProfileId(id: string): boolean {
+  return DEMO_IDS.has(id)
+}
+
+export function isDemoUsername(username: string): boolean {
+  return DEMO_USERNAMES.has(username)
+}
+
 export const DEMO_POSTS_BY_USERNAME: Record<string, { id: string; content: string; created_at: string }[]> = {
   'jibraan-mukhtar': [
     {

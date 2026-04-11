@@ -5,7 +5,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import SyndicateLogo from '@/components/brand/SyndicateLogo'
+import MafiaLogo from '@/components/brand/MafiaLogo'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -59,7 +59,7 @@ export default function LoginPage() {
 
       <div style={{ position: 'relative', zIndex: 10, padding: '1.75rem 2rem' }}>
         <Link href="/" style={{ textDecoration: 'none' }}>
-          <SyndicateLogo size="sm" muted />
+          <MafiaLogo size="sm" muted />
         </Link>
       </div>
 

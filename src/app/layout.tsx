@@ -19,8 +19,9 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: "Syndicate",
-  description: "A private network for founders, investors, and operators who are building something real.",
+  title: "Mafia",
+  description:
+    "Mafia is a private, invite-only circle for founders, investors, and operators who ship real work — signal over noise.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

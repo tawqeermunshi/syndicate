@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import type { UserRole } from '@/types'
-import SyndicateLogo from '@/components/brand/SyndicateLogo'
+import MafiaLogo from '@/components/brand/MafiaLogo'
 
 const ROLE_LABELS: Record<UserRole, string> = {
   founder: 'Founder',
@@ -161,7 +161,7 @@ export default function ApplyPage() {
       {/* Nav */}
       <div style={{ position: 'relative', zIndex: 10, padding: '1.75rem 2rem', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
         <Link href="/" style={{ textDecoration: 'none' }}>
-          <SyndicateLogo size="sm" muted />
+          <MafiaLogo size="sm" muted />
         </Link>
       </div>
 
@@ -219,7 +219,7 @@ export default function ApplyPage() {
                 <STextarea name="what_want" required rows={3} placeholder="Seed funding ($500K–$1M), a technical co-founder, early enterprise customers..." />
               </Field>
 
-              <Field label="Why Syndicate?">
+              <Field label="Why Mafia?">
                 <STextarea name="why_join" required rows={3} placeholder="200 words max. Be honest." />
               </Field>
 

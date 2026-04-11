@@ -7,7 +7,7 @@ import type { Profile } from '@/types'
 import { Rss, Users, Calendar, Mail, Ticket, Settings, LogOut, ShieldCheck } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
-import SyndicateLogo from '@/components/brand/SyndicateLogo'
+import MafiaLogo from '@/components/brand/MafiaLogo'
 
 const NAV = [
   { href: '/feed', label: 'Feed', icon: Rss },
@@ -43,7 +43,7 @@ export default function Sidebar({ profile }: { profile: Profile }) {
 
       {/* Logo */}
       <div className="px-5 py-5" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-        <SyndicateLogo size="sm" muted />
+        <MafiaLogo size="sm" muted />
       </div>
 
       {/* Nav */}

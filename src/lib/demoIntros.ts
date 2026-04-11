@@ -9,12 +9,20 @@ export type DemoIntroRequest = {
   created_at: string
 }
 
-const STORAGE_KEY = 'syndicate_demo_intro_requests'
+const STORAGE_KEY = 'mafia_demo_intro_requests'
+const LEGACY_STORAGE_KEY = 'syndicate_demo_intro_requests'
 
-export function getDemoIntroRequests(): DemoIntroRequest[] {
+function readStoredIntroRequests(): DemoIntroRequest[] {
   if (typeof window === 'undefined') return []
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY)
+    let raw = window.localStorage.getItem(STORAGE_KEY)
+    if (!raw) {
+      raw = window.localStorage.getItem(LEGACY_STORAGE_KEY)
+      if (raw) {
+        window.localStorage.setItem(STORAGE_KEY, raw)
+        window.localStorage.removeItem(LEGACY_STORAGE_KEY)
+      }
+    }
     if (!raw) return []
     const parsed = JSON.parse(raw)
     if (!Array.isArray(parsed)) return []
@@ -24,9 +32,13 @@ export function getDemoIntroRequests(): DemoIntroRequest[] {
   }
 }
 
+export function getDemoIntroRequests(): DemoIntroRequest[] {
+  return readStoredIntroRequests()
+}
+
 export function saveDemoIntroRequest(request: Omit<DemoIntroRequest, 'id' | 'created_at' | 'status'>) {
   if (typeof window === 'undefined') return
-  const current = getDemoIntroRequests()
+  const current = readStoredIntroRequests()
   const next: DemoIntroRequest[] = [
     {
       id: `demo-intro-${Date.now()}`,

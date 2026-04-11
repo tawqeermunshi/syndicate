@@ -1,5 +1,5 @@
 -- ============================================================
--- Syndicate — Database Schema
+-- Mafia app — Database Schema
 -- ============================================================
 
 -- Enable UUID extension

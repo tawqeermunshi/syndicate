@@ -1,7 +1,7 @@
 'use client'
 
 import { motion, AnimatePresence } from 'framer-motion'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import NexusLogo from '@/components/brand/NexusLogo'
 
@@ -17,20 +17,6 @@ const PARTICLES = Array.from({ length: 24 }, (_, i) => ({
   color: i % 3 === 0 ? 'rgba(167,139,250,VAL)' : i % 3 === 1 ? 'rgba(59,130,246,VAL)' : 'rgba(217,119,6,VAL)',
   opacity: 0.3 + (i % 4) * 0.12,
 }))
-
-function useReveal() {
-  const ref = useRef<HTMLDivElement>(null)
-  useEffect(() => {
-    const el = ref.current
-    if (!el) return
-    const obs = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting) { el.classList.add('visible'); obs.disconnect() }
-    }, { threshold: 0.15 })
-    obs.observe(el)
-    return () => obs.disconnect()
-  }, [])
-  return ref
-}
 
 export default function LandingClient() {
   const [wordIndex, setWordIndex] = useState(0)
@@ -153,50 +139,84 @@ export default function LandingClient() {
           style={{
             fontSize: '1.05rem', lineHeight: 1.7,
             color: 'var(--text2)', maxWidth: '440px',
-            margin: '0 auto 3rem',
+            margin: '0 auto 3.35rem',
           }}>
           A closed network for people building things that matter.
           Signal over noise — every single time.
         </motion.p>
 
-        {/* CTAs */}
+        {/* CTAs: Apply vs redeem (both = ways in without being a member); sign-in separate + quiet */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.5 }}
-          style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+          style={{
+            display: 'flex', flexDirection: 'column', alignItems: 'stretch',
+            width: '100%', maxWidth: '400px', margin: '0 auto',
+          }}>
 
-          <Link href="/apply">
-            <motion.div
-              whileHover={{ scale: 1.03, y: -2 }}
-              whileTap={{ scale: 0.97 }}
-              className="glow-btn"
-              style={{
-                display: 'flex', alignItems: 'center', gap: '10px',
-                padding: '0 2.5rem', height: '54px', borderRadius: '14px',
-                background: 'linear-gradient(135deg, #7c3aed 0%, #d97706 100%)',
-                color: '#fff', fontSize: '0.92rem', fontWeight: 700,
-                letterSpacing: '-0.01em',
-              }}>
-              Apply for access
-              <motion.span
-                animate={{ x: [0, 5, 0] }}
-                transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}>
-                →
-              </motion.span>
-            </motion.div>
-          </Link>
-
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
-            <Link href="/login" style={{ fontSize: '0.83rem', color: 'var(--text3)', textDecoration: 'none' }}
-              onMouseEnter={e => (e.currentTarget.style.color = 'var(--text2)')}
-              onMouseLeave={e => (e.currentTarget.style.color = 'var(--text3)')}>
-              Already a member? Sign in
+          <div
+            style={{
+              display: 'flex', flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center',
+              gap: '8px', width: '100%',
+            }}>
+            <Link href="/apply" style={{ flex: '2 1 200px', textDecoration: 'none', minWidth: 0 }}>
+              <motion.div
+                whileHover={{ scale: 1.02, y: -1 }}
+                whileTap={{ scale: 0.98 }}
+                className="glow-btn"
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                  height: '46px', borderRadius: '12px', padding: '0 1.1rem',
+                  background: 'linear-gradient(135deg, #7c3aed 0%, #d97706 100%)',
+                  color: '#fff', fontSize: '0.86rem', fontWeight: 700,
+                  letterSpacing: '-0.01em',
+                }}>
+                Apply for access
+                <motion.span
+                  animate={{ x: [0, 4, 0] }}
+                  transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}>
+                  →
+                </motion.span>
+              </motion.div>
             </Link>
-            <Link href="/login" style={{ fontSize: '0.8rem', color: 'rgba(167,139,250,0.65)', textDecoration: 'none' }}
-              onMouseEnter={e => (e.currentTarget.style.color = 'rgba(167,139,250,0.9)')}
-              onMouseLeave={e => (e.currentTarget.style.color = 'rgba(167,139,250,0.65)')}>
-              Have an invite code? Join without applying →
+            <span
+              aria-hidden
+              style={{
+                flex: '0 0 auto', alignSelf: 'center',
+                fontSize: '0.7rem', fontWeight: 600, letterSpacing: '0.14em',
+                textTransform: 'uppercase', color: 'var(--text3)',
+                padding: '0 2px',
+              }}>
+              or
+            </span>
+            <Link href="/login" style={{ flex: '1 1 132px', textDecoration: 'none', minWidth: 0 }}>
+              <motion.div
+                whileHover={{ y: -1, borderColor: 'rgba(167,139,250,0.45)', background: 'rgba(124,58,237,0.1)' }}
+                whileTap={{ scale: 0.98 }}
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  height: '46px', borderRadius: '12px', padding: '0 12px',
+                  border: '1px solid rgba(167,139,250,0.28)',
+                  background: 'rgba(124,58,237,0.05)',
+                  color: 'rgba(224,213,254,0.95)', fontSize: '0.82rem', fontWeight: 600,
+                  letterSpacing: '-0.01em', whiteSpace: 'nowrap',
+                }}>
+                Redeem invite code
+              </motion.div>
+            </Link>
+          </div>
+
+          <div style={{ marginTop: '1.85rem', paddingTop: '1.25rem', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+            <Link
+              href="/login"
+              style={{
+                display: 'block', textAlign: 'center', textDecoration: 'none',
+                fontSize: '0.78rem', color: 'var(--text3)',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.color = 'var(--text2)' }}
+              onMouseLeave={e => { e.currentTarget.style.color = 'var(--text3)' }}>
+              Already a member? <span style={{ textDecoration: 'underline', textUnderlineOffset: '3px' }}>Sign in</span>
             </Link>
           </div>
         </motion.div>

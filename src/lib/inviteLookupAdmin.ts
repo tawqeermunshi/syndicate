@@ -29,5 +29,16 @@ export async function lookupInviteRow(
     invite = row
   }
 
+  // Always re-read from table so used_by / expiry are authoritative (RPC payloads can be stale).
+  if (invite?.id) {
+    const { data: fresh, error: freshErr } = await admin
+      .from('invites')
+      .select('id, used_by, expires_at')
+      .eq('id', invite.id)
+      .single()
+    if (freshErr) return { invite: null, queryError: freshErr.message }
+    if (fresh) invite = fresh
+  }
+
   return { invite, queryError: null }
 }

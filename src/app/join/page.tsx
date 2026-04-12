@@ -209,6 +209,11 @@ function JoinInner() {
           style={{ width: '100%', maxWidth: '400px' }}>
 
           <div style={{ position: 'relative', borderRadius: '20px', padding: '2.25rem', background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.07)', backdropFilter: 'blur(24px)' }}>
+            {searchParams.get('invite_used') === '1' && (
+              <p style={{ color: '#f87171', fontSize: '0.78rem', marginBottom: '1rem', lineHeight: 1.5 }}>
+                That invite was already used by another account. Ask your contact for a new code.
+              </p>
+            )}
             <ModalCloseButton
               floating
               ariaLabel="Close and return home"

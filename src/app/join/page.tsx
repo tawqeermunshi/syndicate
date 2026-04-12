@@ -22,7 +22,6 @@ function JoinInner() {
   const [joinPassword, setJoinPassword] = useState('')
   const [joinConfirm, setJoinConfirm] = useState('')
   const [joinError, setJoinError] = useState('')
-  const [joinSuccess, setJoinSuccess] = useState('')
   const [joinLoading, setJoinLoading] = useState(false)
   const [oauthLoading, setOauthLoading] = useState(false)
 
@@ -54,7 +53,6 @@ function JoinInner() {
       if (!res.ok) throw new Error(body.error || `Request failed (${res.status})`)
       setVerifiedInvite(code)
       setJoinError('')
-      setJoinSuccess('')
     } catch (e) {
       setVerifiedInvite(null)
       setVerifyError(e instanceof Error ? e.message : 'Could not verify code')
@@ -75,7 +73,6 @@ function JoinInner() {
   function clearInvite() {
     setVerifiedInvite(null)
     setVerifyError('')
-    setJoinSuccess('')
     setJoinError('')
   }
 
@@ -102,7 +99,6 @@ function JoinInner() {
     e.preventDefault()
     if (!verifiedInvite) return
     setJoinError('')
-    setJoinSuccess('')
     if (joinPassword.length < 8) {
       setJoinError('Password must be at least 8 characters.')
       return
@@ -113,26 +109,32 @@ function JoinInner() {
     }
     setJoinLoading(true)
     const supabase = createClient()
-    const { data, error: upErr } = await supabase.auth.signUp({
-      email: joinEmail.trim(),
-      password: joinPassword,
-      options: {
-        emailRedirectTo: inviteOAuthRedirect(verifiedInvite),
-      },
+    const email = joinEmail.trim()
+
+    const res = await fetch('/api/invite/sign-up', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password: joinPassword, inviteCode: verifiedInvite }),
     })
-    if (upErr) {
-      setJoinError(upErr.message)
+    const payload = (await res.json().catch(() => ({}))) as { error?: string; ok?: boolean }
+    if (!res.ok) {
+      setJoinError(payload.error || `Could not create account (${res.status})`)
       setJoinLoading(false)
       return
     }
-    if (data.session) {
-      router.push(`/onboarding?invite=${encodeURIComponent(verifiedInvite)}`)
+
+    const { error: signInErr } = await supabase.auth.signInWithPassword({ email, password: joinPassword })
+    if (signInErr) {
+      setJoinError(
+        signInErr.message
+          + ' Your account may have been created — try signing in from the home page.',
+      )
+      setJoinLoading(false)
       return
     }
-    setJoinSuccess(
-      'Check your email for a confirmation link. After you confirm, you’ll finish onboarding and your invite will apply.',
-    )
+
     setJoinLoading(false)
+    router.push(`/onboarding?invite=${encodeURIComponent(verifiedInvite)}`)
   }
 
   const bg = {
@@ -181,7 +183,7 @@ function JoinInner() {
                   Redeem invite code
                 </h1>
                 <p style={{ fontSize: '0.83rem', color: 'var(--text3)', marginBottom: '1.35rem', lineHeight: 1.55 }}>
-                  Enter the code you were given. After it is verified, you will create your account and then complete your profile like any new member.
+                  Enter the code you were given. Once it checks out, you will set email and password (or Google) and go straight to your profile — no separate email confirmation step.
                 </p>
 
                 <div style={{ marginBottom: '1.25rem', padding: '0.9rem', borderRadius: '14px', border: '1px solid rgba(139,92,246,0.2)', background: 'rgba(139,92,246,0.06)' }}>
@@ -235,7 +237,7 @@ function JoinInner() {
                   Create your account
                 </h1>
                 <p style={{ fontSize: '0.83rem', color: 'var(--text3)', marginBottom: '1rem', lineHeight: 1.55 }}>
-                  Choose email and password or Google. Next you will enter your profile details on onboarding.
+                  Choose email and password or Google. Your invite is already verified — you will go straight to profile setup.
                 </p>
 
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', marginBottom: '1rem', padding: '8px 12px', borderRadius: '10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
@@ -283,7 +285,6 @@ function JoinInner() {
                     placeholder="Confirm password"
                   />
                   {joinError && <p style={{ color: '#f87171', fontSize: '0.78rem' }}>{joinError}</p>}
-                  {joinSuccess && <p style={{ color: 'rgba(52,211,153,0.85)', fontSize: '0.78rem' }}>{joinSuccess}</p>}
                   <GradientButton loading={joinLoading}>
                     {joinLoading ? 'Creating account…' : 'Create account'}
                   </GradientButton>

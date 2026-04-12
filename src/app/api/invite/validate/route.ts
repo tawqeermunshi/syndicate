@@ -1,8 +1,7 @@
 import { normalizeInviteCode } from '@/lib/inviteCode'
+import { lookupInviteRow } from '@/lib/inviteLookupAdmin'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { NextResponse } from 'next/server'
-
-type InviteRow = { id: string; used_by: string | null; expires_at: string | null }
 
 /** Anonymous callers cannot read `invites` under normal RLS; use service role server-side only. */
 export async function POST(request: Request) {
@@ -23,29 +22,12 @@ export async function POST(request: Request) {
     }
 
     const admin = createAdminClient()
-    const normalized = normalizeInviteCode(code)
-    if (!normalized) {
+    if (!normalizeInviteCode(code)) {
       return NextResponse.json({ error: 'No invite code provided' }, { status: 400 })
     }
 
-    let invite: InviteRow | null = null
-
-    const rpc = await admin.rpc('match_invite_code', { p_raw: normalized })
-    if (!rpc.error && rpc.data !== null && rpc.data !== undefined) {
-      const rows = rpc.data as InviteRow | InviteRow[]
-      invite = Array.isArray(rows) ? rows[0] ?? null : rows
-    }
-
-    if (!invite) {
-      const { data: row, error } = await admin
-        .from('invites')
-        .select('id, used_by, expires_at')
-        .ilike('code', normalized)
-        .maybeSingle()
-      if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-      invite = row
-    }
-
+    const { invite, queryError } = await lookupInviteRow(admin, code)
+    if (queryError) return NextResponse.json({ error: queryError }, { status: 500 })
     if (!invite) return NextResponse.json({ error: 'Invalid invite code' }, { status: 404 })
     if (invite.used_by) return NextResponse.json({ error: 'This invite has already been used' }, { status: 400 })
     if (invite.expires_at && new Date(invite.expires_at) < new Date()) {

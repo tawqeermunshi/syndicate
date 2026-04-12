@@ -51,7 +51,7 @@ function JoinInner() {
         }
       }
       if (!res.ok) throw new Error(body.error || `Request failed (${res.status})`)
-      setVerifiedInvite(code.toUpperCase())
+      setVerifiedInvite(code.trim().toLowerCase())
       setJoinError('')
       setJoinSuccess('')
     } catch (e) {
@@ -192,7 +192,7 @@ function JoinInner() {
                       autoComplete="off"
                       spellCheck={false}
                       value={inviteCode}
-                      onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
+                      onChange={(e) => setInviteCode(e.target.value.toLowerCase())}
                       placeholder="e.g. ABCD12"
                       style={{ flex: 1, fontFamily: 'ui-monospace, monospace', letterSpacing: '0.06em' }}
                     />

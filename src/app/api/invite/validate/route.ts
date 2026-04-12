@@ -11,13 +11,17 @@ export async function POST(request: Request) {
 
     if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
       return NextResponse.json(
-        { error: 'Invite validation is not configured on this server.' },
+        {
+          error:
+            'Invite codes cannot be verified until SUPABASE_SERVICE_ROLE_KEY is set on this server (e.g. in Vercel → Project → Settings → Environment Variables). Copy it from Supabase → Project Settings → API → service_role, then redeploy.',
+        },
         { status: 503 },
       )
     }
 
     const admin = createAdminClient()
-    const normalized = code.trim().toUpperCase()
+    // DB default codes are md5 hex → lowercase; match case-insensitively by normalizing to lower
+    const normalized = code.trim().toLowerCase()
     const { data: invite, error } = await admin
       .from('invites')
       .select('id, used_by, expires_at')

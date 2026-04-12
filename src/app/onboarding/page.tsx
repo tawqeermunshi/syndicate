@@ -120,7 +120,7 @@ function OnboardingForm() {
       const { data: invite } = await supabase
         .from('invites')
         .select('id, created_by, used_by')
-        .eq('code', inviteCode.toUpperCase())
+        .eq('code', inviteCode.trim().toLowerCase())
         .single()
 
       if (invite && !invite.used_by) {

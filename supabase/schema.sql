@@ -95,7 +95,7 @@ create table invites (
   id uuid primary key default uuid_generate_v4(),
   code text unique not null default substring(md5(random()::text), 1, 10),
   created_by uuid references profiles(id) on delete cascade not null,
-  used_by uuid references profiles(id),
+  used_by uuid references auth.users(id),
   used_at timestamptz,
   expires_at timestamptz,
   created_at timestamptz not null default now()

@@ -19,6 +19,9 @@ function JoinInner() {
   const [verifyLoading, setVerifyLoading] = useState(false)
 
   const [joinEmail, setJoinEmail] = useState('')
+  const [joinOtp, setJoinOtp] = useState('')
+  const [joinOtpSent, setJoinOtpSent] = useState(false)
+  const [otpSendLoading, setOtpSendLoading] = useState(false)
   const [joinPassword, setJoinPassword] = useState('')
   const [joinConfirm, setJoinConfirm] = useState('')
   const [joinError, setJoinError] = useState('')
@@ -53,6 +56,8 @@ function JoinInner() {
       if (!res.ok) throw new Error(body.error || `Request failed (${res.status})`)
       setVerifiedInvite(code)
       setJoinError('')
+      setJoinOtp('')
+      setJoinOtpSent(false)
     } catch (e) {
       setVerifiedInvite(null)
       setVerifyError(e instanceof Error ? e.message : 'Could not verify code')
@@ -74,6 +79,33 @@ function JoinInner() {
     setVerifiedInvite(null)
     setVerifyError('')
     setJoinError('')
+    setJoinOtp('')
+    setJoinOtpSent(false)
+  }
+
+  async function handleSendEmailOtp() {
+    const email = joinEmail.trim().toLowerCase()
+    if (!email.includes('@')) {
+      setJoinError('Enter your email first.')
+      return
+    }
+    setJoinError('')
+    setOtpSendLoading(true)
+    try {
+      const res = await fetch('/api/invite/request-email-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      })
+      const body = (await res.json().catch(() => ({}))) as { error?: string; ok?: boolean; devOtp?: string }
+      if (!res.ok) throw new Error(body.error || `Could not send code (${res.status})`)
+      if (body.devOtp) setJoinOtp(body.devOtp)
+      setJoinOtpSent(true)
+    } catch (e) {
+      setJoinError(e instanceof Error ? e.message : 'Could not send verification code')
+    } finally {
+      setOtpSendLoading(false)
+    }
   }
 
   function inviteOAuthRedirect(invite: string) {
@@ -107,6 +139,10 @@ function JoinInner() {
       setJoinError('Passwords do not match.')
       return
     }
+    if (!joinOtpSent || joinOtp.replace(/\D/g, '').length !== 6) {
+      setJoinError('Send a verification code to your email and enter the 6-digit code.')
+      return
+    }
     setJoinLoading(true)
     const supabase = createClient()
     const email = joinEmail.trim()
@@ -114,7 +150,12 @@ function JoinInner() {
     const res = await fetch('/api/invite/sign-up', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password: joinPassword, inviteCode: verifiedInvite }),
+      body: JSON.stringify({
+        email,
+        password: joinPassword,
+        inviteCode: verifiedInvite,
+        otp: joinOtp.replace(/\D/g, ''),
+      }),
     })
     const payload = (await res.json().catch(() => ({}))) as { error?: string; ok?: boolean }
     if (!res.ok) {
@@ -237,7 +278,8 @@ function JoinInner() {
                   Create your account
                 </h1>
                 <p style={{ fontSize: '0.83rem', color: 'var(--text3)', marginBottom: '1rem', lineHeight: 1.55 }}>
-                  Choose email and password or Google. Your invite is already verified — you will go straight to profile setup.
+                  Use a real inbox: we email a 6-digit code, then you set a password. Continue with Google skips the code
+                  because Google already verified your email.
                 </p>
 
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', marginBottom: '1rem', padding: '8px 12px', borderRadius: '10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
@@ -265,9 +307,43 @@ function JoinInner() {
                     required
                     autoComplete="email"
                     value={joinEmail}
-                    onChange={(e) => setJoinEmail(e.target.value)}
+                    onChange={(e) => {
+                      setJoinEmail(e.target.value)
+                      setJoinOtpSent(false)
+                      setJoinOtp('')
+                    }}
                     placeholder="Work email"
                   />
+                  <motion.button
+                    type="button"
+                    disabled={otpSendLoading || !joinEmail.trim().includes('@')}
+                    onClick={() => void handleSendEmailOtp()}
+                    whileTap={{ scale: 0.98 }}
+                    style={{
+                      height: '40px',
+                      borderRadius: '10px',
+                      fontSize: '0.82rem',
+                      fontWeight: 600,
+                      background: 'rgba(124,58,237,0.25)',
+                      color: '#e9e7ef',
+                      border: '1px solid rgba(167,139,250,0.35)',
+                      cursor: otpSendLoading || !joinEmail.trim().includes('@') ? 'not-allowed' : 'pointer',
+                      opacity: otpSendLoading || !joinEmail.trim().includes('@') ? 0.45 : 1,
+                    }}>
+                    {otpSendLoading ? 'Sending…' : joinOtpSent ? 'Resend verification code' : 'Send verification code'}
+                  </motion.button>
+                  {joinOtpSent && (
+                    <StyledInput
+                      type="text"
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                      maxLength={6}
+                      value={joinOtp}
+                      onChange={(e) => setJoinOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                      placeholder="6-digit code from email"
+                      style={{ fontFamily: 'ui-monospace, monospace', letterSpacing: '0.2em' }}
+                    />
+                  )}
                   <StyledInput
                     type="password"
                     required

@@ -39,10 +39,11 @@ export default function Cursor() {
     function lerp(a: number, b: number, t: number) { return a + (b - a) * t }
 
     function animate() {
-      dotX = lerp(dotX, mouseX, 0.35)
-      dotY = lerp(dotY, mouseY, 0.35)
-      ringX = lerp(ringX, mouseX, 0.13)
-      ringY = lerp(ringY, mouseY, 0.13)
+      // Higher lerp = snappier follow (was 0.35 / 0.13 — felt sluggish)
+      dotX = lerp(dotX, mouseX, 0.62)
+      dotY = lerp(dotY, mouseY, 0.62)
+      ringX = lerp(ringX, mouseX, 0.28)
+      ringY = lerp(ringY, mouseY, 0.28)
       if (dotRef.current) {
         dotRef.current.style.transform = `translate3d(${dotX}px, ${dotY}px, 0)`
       }

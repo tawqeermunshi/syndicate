@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import type { FormEvent } from 'react'
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { normalizeInviteCode } from '@/lib/inviteCode'
 import { createClient } from '@/lib/supabase/client'
 import { GoogleIcon, GradientButton, StyledInput } from '@/components/auth/AuthFormBits'
 import { AuthScreenTopBar, BackButton, ModalCloseButton } from '@/components/nav/NavChrome'
@@ -28,7 +29,7 @@ function JoinInner() {
   const inviteParamAttempted = useRef<string | null>(null)
 
   const verifyInvite = useCallback(async (codeRaw: string) => {
-    const code = codeRaw.trim()
+    const code = normalizeInviteCode(codeRaw)
     if (!code) {
       setVerifyError('Enter an invite code')
       return
@@ -51,7 +52,7 @@ function JoinInner() {
         }
       }
       if (!res.ok) throw new Error(body.error || `Request failed (${res.status})`)
-      setVerifiedInvite(code.trim().toLowerCase())
+      setVerifiedInvite(code)
       setJoinError('')
       setJoinSuccess('')
     } catch (e) {
@@ -63,7 +64,8 @@ function JoinInner() {
   }, [])
 
   useEffect(() => {
-    const q = searchParams.get('invite')?.trim()
+    const raw = searchParams.get('invite')
+    const q = raw ? normalizeInviteCode(raw) : ''
     if (!q || inviteParamAttempted.current === q) return
     inviteParamAttempted.current = q
     setInviteCode(q)
@@ -192,7 +194,7 @@ function JoinInner() {
                       autoComplete="off"
                       spellCheck={false}
                       value={inviteCode}
-                      onChange={(e) => setInviteCode(e.target.value.toLowerCase())}
+                      onChange={(e) => setInviteCode(normalizeInviteCode(e.target.value))}
                       placeholder="e.g. ABCD12"
                       style={{ flex: 1, fontFamily: 'ui-monospace, monospace', letterSpacing: '0.06em' }}
                     />

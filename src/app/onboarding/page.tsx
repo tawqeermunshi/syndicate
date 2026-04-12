@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { AuthScreenTopBar } from '@/components/nav/NavChrome'
 import { motion } from 'framer-motion'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { normalizeInviteCode } from '@/lib/inviteCode'
 import { createClient } from '@/lib/supabase/client'
 import type { UserRole } from '@/types'
 
@@ -116,11 +117,12 @@ function OnboardingForm() {
     let status = currentProfile?.status ?? 'pending'
     let invitedBy = currentProfile?.invited_by ?? null
 
-    if (inviteCode) {
+    const inviteNormalized = inviteCode ? normalizeInviteCode(inviteCode) : ''
+    if (inviteNormalized) {
       const { data: invite } = await supabase
         .from('invites')
         .select('id, created_by, used_by')
-        .eq('code', inviteCode.trim().toLowerCase())
+        .eq('code', inviteNormalized)
         .single()
 
       if (invite && !invite.used_by) {

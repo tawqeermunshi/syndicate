@@ -6,8 +6,8 @@ import { Suspense, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import NexusLogo from '@/components/brand/NexusLogo'
 import { GoogleIcon, GradientButton, StyledInput } from '@/components/auth/AuthFormBits'
+import { AuthScreenTopBar } from '@/components/nav/NavChrome'
 
 function LoginInner() {
   const router = useRouter()
@@ -89,11 +89,7 @@ function LoginInner() {
     <main style={bg}>
       {orbs}
 
-      <div style={{ position: 'relative', zIndex: 10, padding: '1.75rem 2rem' }}>
-        <Link href="/" style={{ textDecoration: 'none' }}>
-          <NexusLogo size="sm" muted />
-        </Link>
-      </div>
+      <AuthScreenTopBar />
 
       <div style={{ position: 'relative', zIndex: 10, flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.5rem' }}>
         <motion.div

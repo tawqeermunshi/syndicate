@@ -2,6 +2,7 @@
 
 import { useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { AuthScreenTopBar } from '@/components/nav/NavChrome'
 import { motion } from 'framer-motion'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { createClient } from '@/lib/supabase/client'
@@ -176,7 +177,9 @@ function OnboardingForm() {
         <div className="grid-bg" style={{ position: 'absolute', inset: 0 }} />
       </div>
 
-      <div style={{ position: 'relative', zIndex: 10, maxWidth: '700px', margin: '0 auto', padding: '3rem 1.5rem 5rem' }}>
+      <AuthScreenTopBar />
+
+      <div style={{ position: 'relative', zIndex: 10, maxWidth: '700px', margin: '0 auto', padding: '1.5rem 1.5rem 5rem' }}>
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}

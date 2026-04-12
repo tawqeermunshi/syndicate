@@ -7,6 +7,7 @@ import type { Profile, PostCategory } from '@/types'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { motion, AnimatePresence } from 'framer-motion'
+import { ModalCloseButton } from '@/components/nav/NavChrome'
 
 const CATEGORIES: { value: PostCategory; label: string; color: string }[] = [
   { value: 'building',        label: 'Building',        color: '#60a5fa' },
@@ -59,7 +60,16 @@ export default function PostComposer({ profile }: { profile: Profile }) {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="flex-1 space-y-4">
+              className="flex-1 space-y-4 relative">
+              <div className="flex justify-end">
+                <ModalCloseButton
+                  ariaLabel="Close composer"
+                  onClick={() => {
+                    setOpen(false)
+                    setContent('')
+                  }}
+                />
+              </div>
               <textarea
                 autoFocus
                 value={content}

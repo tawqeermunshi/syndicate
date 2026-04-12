@@ -3,11 +3,10 @@
 import { motion } from 'framer-motion'
 import type { FormEvent } from 'react'
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react'
-import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import NexusLogo from '@/components/brand/NexusLogo'
 import { GoogleIcon, GradientButton, StyledInput } from '@/components/auth/AuthFormBits'
+import { AuthScreenTopBar, BackButton, ModalCloseButton } from '@/components/nav/NavChrome'
 
 function JoinInner() {
   const router = useRouter()
@@ -155,11 +154,7 @@ function JoinInner() {
     <main style={bg}>
       {orbs}
 
-      <div style={{ position: 'relative', zIndex: 10, padding: '1.75rem 2rem' }}>
-        <Link href="/" style={{ textDecoration: 'none' }}>
-          <NexusLogo size="sm" muted />
-        </Link>
-      </div>
+      <AuthScreenTopBar />
 
       <div style={{ position: 'relative', zIndex: 10, flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.5rem' }}>
         <motion.div
@@ -168,14 +163,19 @@ function JoinInner() {
           transition={{ duration: 0.65, ease: [0.23, 1, 0.32, 1] }}
           style={{ width: '100%', maxWidth: '400px' }}>
 
-          <div style={{ borderRadius: '20px', padding: '2.25rem', background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.07)', backdropFilter: 'blur(24px)' }}>
+          <div style={{ position: 'relative', borderRadius: '20px', padding: '2.25rem', background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.07)', backdropFilter: 'blur(24px)' }}>
+            <ModalCloseButton
+              floating
+              ariaLabel="Close and return home"
+              onClick={() => router.push('/')}
+            />
 
             {!verifiedInvite ? (
               <>
                 <p style={{ fontSize: '0.65rem', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(196,181,253,0.65)', margin: '0 0 6px' }}>
                   Pre-approved access
                 </p>
-                <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '1.75rem', fontWeight: 700, color: 'var(--text)', marginBottom: '0.5rem', letterSpacing: '-0.03em' }}>
+                <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '1.75rem', fontWeight: 700, color: 'var(--text)', marginBottom: '0.5rem', marginRight: '2.5rem', letterSpacing: '-0.03em' }}>
                   Redeem invite code
                 </h1>
                 <p style={{ fontSize: '0.83rem', color: 'var(--text3)', marginBottom: '1.35rem', lineHeight: 1.55 }}>
@@ -215,10 +215,21 @@ function JoinInner() {
               </>
             ) : (
               <>
+                <div style={{ marginBottom: '1rem' }}>
+                  <BackButton
+                    onClick={() => {
+                      inviteParamAttempted.current = null
+                      clearInvite()
+                      setInviteCode('')
+                      router.replace('/join')
+                    }}>
+                    Back to invite code
+                  </BackButton>
+                </div>
                 <p style={{ fontSize: '0.65rem', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(52,211,153,0.75)', margin: '0 0 6px' }}>
                   Code accepted
                 </p>
-                <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '1.75rem', fontWeight: 700, color: 'var(--text)', marginBottom: '0.5rem', letterSpacing: '-0.03em' }}>
+                <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '1.75rem', fontWeight: 700, color: 'var(--text)', marginBottom: '0.5rem', marginRight: '2.5rem', letterSpacing: '-0.03em' }}>
                   Create your account
                 </h1>
                 <p style={{ fontSize: '0.83rem', color: 'var(--text3)', marginBottom: '1rem', lineHeight: 1.55 }}>

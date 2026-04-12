@@ -1,12 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import Link from 'next/link'
+import { AuthScreenTopBar } from '@/components/nav/NavChrome'
 import { motion } from 'framer-motion'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import type { UserRole } from '@/types'
-import NexusLogo from '@/components/brand/NexusLogo'
-
 const ROLE_LABELS: Record<UserRole, string> = {
   founder: 'Founder',
   vc: 'VC / Angel Investor',
@@ -133,7 +131,8 @@ export default function ApplyPage() {
     return (
       <main style={bg}>
         {orbs}
-        <div style={{ position: 'relative', zIndex: 10, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.5rem' }}>
+        <AuthScreenTopBar />
+        <div style={{ position: 'relative', zIndex: 10, minHeight: 'calc(100vh - 5rem)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.5rem' }}>
           <motion.div initial={{ opacity: 0, scale: 0.94 }} animate={{ opacity: 1, scale: 1 }} style={{ textAlign: 'center', maxWidth: '400px' }}>
             <div style={{ width: 64, height: 64, borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.75rem', fontSize: '1.75rem', background: 'rgba(124,58,237,0.12)', border: '1px solid rgba(124,58,237,0.25)' }}>
               ✦
@@ -145,9 +144,6 @@ export default function ApplyPage() {
               We review every application manually. You&apos;ll hear from us within a few days.
               If approved, you&apos;ll receive an email with next steps.
             </p>
-            <Link href="/" style={{ display: 'inline-block', marginTop: '2rem', fontSize: '0.82rem', color: 'var(--text3)', textDecoration: 'none' }}>
-              ← Back to home
-            </Link>
           </motion.div>
         </div>
       </main>
@@ -158,11 +154,8 @@ export default function ApplyPage() {
     <main style={bg}>
       {orbs}
 
-      {/* Nav */}
-      <div style={{ position: 'relative', zIndex: 10, padding: '1.75rem 2rem', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-        <Link href="/" style={{ textDecoration: 'none' }}>
-          <NexusLogo size="sm" muted />
-        </Link>
+      <div style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        <AuthScreenTopBar />
       </div>
 
       <div style={{ position: 'relative', zIndex: 10, maxWidth: '640px', margin: '0 auto', padding: '3rem 1.5rem 5rem' }}>

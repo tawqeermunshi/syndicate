@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import NexusLogo from '@/components/brand/NexusLogo'
 import { GoogleIcon, GradientButton, StyledInput } from '@/components/auth/AuthFormBits'
+import { ModalCloseButton } from '@/components/nav/NavChrome'
 
 const ROTATING_WORDS = ['Founders', 'Investors', 'Operators', 'Builders']
 
@@ -347,29 +348,7 @@ export default function LandingClient() {
                     border: '1px solid rgba(255,255,255,0.1)',
                     boxShadow: '0 24px 80px rgba(0,0,0,0.55)',
                   }}>
-                  <button
-                    type="button"
-                    onClick={closeSignInModal}
-                    aria-label="Close"
-                    style={{
-                      position: 'absolute',
-                      top: 14,
-                      right: 14,
-                      width: 32,
-                      height: 32,
-                      borderRadius: '8px',
-                      border: '1px solid rgba(255,255,255,0.1)',
-                      background: 'rgba(255,255,255,0.05)',
-                      color: 'var(--text3)',
-                      fontSize: '1.1rem',
-                      lineHeight: 1,
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}>
-                    ×
-                  </button>
+                  <ModalCloseButton floating onClick={closeSignInModal} />
 
                   <p style={{ fontSize: '0.65rem', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text3)', margin: '0 0 6px' }}>
                     Members

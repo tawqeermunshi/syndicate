@@ -1,5 +1,5 @@
-import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import { AuthScreenTopBar } from '@/components/nav/NavChrome'
 import { redirect } from 'next/navigation'
 
 export default async function PendingPage() {
@@ -20,7 +20,7 @@ export default async function PendingPage() {
   const firstName = profile?.full_name?.split(' ')[0]
 
   return (
-    <main style={{ background: 'var(--ink)', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
+    <main style={{ background: 'var(--ink)', minHeight: '100vh', display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden' }}>
       {/* Orbs */}
       <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}>
         <div className="orb-1" style={{ position: 'absolute', top: '-20%', left: '-15%', width: '65vw', height: '65vw', borderRadius: '50%', background: 'radial-gradient(circle, rgba(124,58,237,0.12) 0%, transparent 65%)', filter: 'blur(60px)' }} />
@@ -28,7 +28,10 @@ export default async function PendingPage() {
         <div className="grid-bg" style={{ position: 'absolute', inset: 0 }} />
       </div>
 
-      <div style={{ position: 'relative', zIndex: 10, textAlign: 'center', maxWidth: '420px', padding: '2rem 1.5rem' }}>
+      <AuthScreenTopBar />
+
+      <div style={{ position: 'relative', zIndex: 10, flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem 1.5rem' }}>
+        <div style={{ textAlign: 'center', maxWidth: '420px' }}>
         {isRejected ? (
           <>
             <div style={{ width: 64, height: 64, borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.75rem', fontSize: '1.5rem', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)' }}>
@@ -74,11 +77,6 @@ export default async function PendingPage() {
             </div>
           </>
         )}
-
-        <div style={{ marginTop: '2.5rem' }}>
-          <Link href="/" style={{ fontSize: '0.82rem', color: 'var(--text3)', textDecoration: 'none' }}>
-            ← Back to home
-          </Link>
         </div>
       </div>
     </main>

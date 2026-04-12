@@ -114,23 +114,9 @@ function OnboardingForm() {
       .eq('id', user.id)
       .maybeSingle()
 
-    let status = currentProfile?.status ?? 'pending'
-    let invitedBy = currentProfile?.invited_by ?? null
-
+    const status = currentProfile?.status ?? 'pending'
+    const invitedBy = currentProfile?.invited_by ?? null
     const inviteNormalized = inviteCode ? normalizeInviteCode(inviteCode) : ''
-    if (inviteNormalized) {
-      const { data: invite } = await supabase
-        .from('invites')
-        .select('id, created_by, used_by')
-        .eq('code', inviteNormalized)
-        .single()
-
-      if (invite && !invite.used_by) {
-        status = 'approved'
-        invitedBy = invite.created_by
-        await supabase.from('invites').update({ used_by: user.id, used_at: new Date().toISOString() }).eq('id', invite.id)
-      }
-    }
 
     const profileData = {
       id: user.id,
@@ -160,6 +146,22 @@ function OnboardingForm() {
     if (profileError) {
       setError(profileError.message)
       setLoading(false)
+      return
+    }
+
+    if (inviteNormalized) {
+      const redeemRes = await fetch('/api/invite/redeem', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ inviteCode: inviteNormalized }),
+      })
+      const redeemBody = (await redeemRes.json().catch(() => ({}))) as { error?: string }
+      if (!redeemRes.ok) {
+        setError(redeemBody.error || `Could not apply invite (${redeemRes.status})`)
+        setLoading(false)
+        return
+      }
+      router.push('/feed')
       return
     }
 

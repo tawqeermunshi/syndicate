@@ -212,17 +212,6 @@ function JoinInner() {
                   </div>
                   {verifyError && <p style={{ color: '#f87171', fontSize: '0.75rem', marginTop: '8px' }}>{verifyError}</p>}
                 </div>
-
-                <p style={{ fontSize: '0.78rem', color: 'var(--text3)', textAlign: 'center', lineHeight: 1.55 }}>
-                  No code?{' '}
-                  <Link href="/apply" style={{ color: 'rgba(167,139,250,0.85)', textDecoration: 'underline', textUnderlineOffset: '3px' }}>
-                    Apply for access
-                  </Link>
-                  {' · '}
-                  <Link href="/login" style={{ color: 'rgba(167,139,250,0.85)', textDecoration: 'underline', textUnderlineOffset: '3px' }}>
-                    Sign in
-                  </Link>
-                </p>
               </>
             ) : (
               <>
@@ -310,12 +299,6 @@ function JoinInner() {
                   <GoogleIcon />
                   Continue with Google
                 </motion.button>
-
-                <p style={{ fontSize: '0.78rem', color: 'var(--text3)', textAlign: 'center', lineHeight: 1.55 }}>
-                  <Link href="/login" style={{ color: 'rgba(167,139,250,0.85)', textDecoration: 'underline', textUnderlineOffset: '3px' }}>
-                    Already a member? Sign in
-                  </Link>
-                </p>
               </>
             )}
           </div>

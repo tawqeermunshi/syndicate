@@ -246,19 +246,6 @@ export default function ApplyPage() {
               </motion.button>
             </form>
           </div>
-
-          <p style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: '0.8rem', color: 'var(--text3)', lineHeight: 1.6 }}>
-            Already a member?{' '}
-            <Link href="/login" style={{ color: 'rgba(167,139,250,0.7)', textDecoration: 'underline', textUnderlineOffset: '3px' }}>
-              Sign in
-            </Link>
-            <br />
-            Have an invite?{' '}
-            <Link href="/join" style={{ color: 'rgba(167,139,250,0.7)', textDecoration: 'underline', textUnderlineOffset: '3px' }}>
-              Verify your code and create an account
-            </Link>
-            {' '}— no application needed.
-          </p>
         </motion.div>
       </div>
     </main>

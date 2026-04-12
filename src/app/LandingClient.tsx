@@ -1,9 +1,14 @@
 'use client'
 
 import { motion, AnimatePresence } from 'framer-motion'
-import { useState, useEffect } from 'react'
+import type { FormEvent } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 import NexusLogo from '@/components/brand/NexusLogo'
+import { GoogleIcon, GradientButton, StyledInput } from '@/components/auth/AuthFormBits'
 
 const ROTATING_WORDS = ['Founders', 'Investors', 'Operators', 'Builders']
 
@@ -19,12 +24,77 @@ const PARTICLES = Array.from({ length: 24 }, (_, i) => ({
 }))
 
 export default function LandingClient() {
+  const router = useRouter()
   const [wordIndex, setWordIndex] = useState(0)
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [signInLoading, setSignInLoading] = useState(false)
+  const [oauthLoading, setOauthLoading] = useState(false)
+  const [signInError, setSignInError] = useState('')
+  const [signInModalOpen, setSignInModalOpen] = useState(false)
+
+  const closeSignInModal = useCallback(() => {
+    setSignInModalOpen(false)
+    setSignInError('')
+  }, [])
 
   useEffect(() => {
     const id = setInterval(() => setWordIndex(i => (i + 1) % ROTATING_WORDS.length), 2400)
     return () => clearInterval(id)
   }, [])
+
+  useEffect(() => {
+    if (!signInModalOpen) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeSignInModal()
+    }
+    window.addEventListener('keydown', onKey)
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      document.body.style.overflow = prev
+    }
+  }, [signInModalOpen, closeSignInModal])
+
+  function memberOAuthRedirect() {
+    return `${window.location.origin}/auth/callback`
+  }
+
+  async function handleHomeSignIn(e: FormEvent) {
+    e.preventDefault()
+    setSignInLoading(true)
+    setSignInError('')
+    const supabase = createClient()
+    const { data, error: signErr } = await supabase.auth.signInWithPassword({ email, password })
+    if (signErr) {
+      setSignInError(signErr.message)
+      setSignInLoading(false)
+      return
+    }
+    const { data: profile } = await supabase.from('profiles').select('status').eq('id', data.user.id).single()
+    if (!profile) {
+      router.push('/onboarding')
+    } else if (profile.status === 'approved') {
+      router.push('/feed')
+    } else {
+      router.push('/pending')
+    }
+  }
+
+  async function handleHomeGoogle() {
+    setOauthLoading(true)
+    setSignInError('')
+    const supabase = createClient()
+    const { error: oErr } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: memberOAuthRedirect() },
+    })
+    if (oErr) {
+      setSignInError(oErr.message)
+      setOauthLoading(false)
+    }
+  }
 
   return (
     <main style={{ background: 'var(--ink)', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
@@ -72,7 +142,7 @@ export default function LandingClient() {
         initial={{ opacity: 0, x: -12 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.7 }}
-        style={{ position: 'absolute', top: 32, left: 32 }}>
+        style={{ position: 'absolute', top: 32, left: 32, zIndex: 20 }}>
         <NexusLogo muted />
       </motion.div>
 
@@ -207,20 +277,162 @@ export default function LandingClient() {
             </Link>
           </div>
 
-          <div style={{ marginTop: '1.85rem', paddingTop: '1.25rem', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-            <Link
-              href="/login"
-              style={{
-                display: 'block', textAlign: 'center', textDecoration: 'none',
-                fontSize: '0.78rem', color: 'var(--text3)',
-              }}
-              onMouseEnter={e => { e.currentTarget.style.color = 'var(--text2)' }}
-              onMouseLeave={e => { e.currentTarget.style.color = 'var(--text3)' }}>
-              Already a member? <span style={{ textDecoration: 'underline', textUnderlineOffset: '3px' }}>Sign in</span>
-            </Link>
-          </div>
+          <motion.button
+            type="button"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.58 }}
+            onClick={() => setSignInModalOpen(true)}
+            whileHover={{ y: -1, borderColor: 'rgba(255,255,255,0.18)', background: 'rgba(255,255,255,0.06)' }}
+            whileTap={{ scale: 0.99 }}
+            style={{
+              marginTop: '1.35rem',
+              width: '100%',
+              height: '46px',
+              borderRadius: '12px',
+              border: '1px solid rgba(255,255,255,0.12)',
+              background: 'rgba(255,255,255,0.04)',
+              color: 'var(--text2)',
+              fontSize: '0.86rem',
+              fontWeight: 600,
+              cursor: 'pointer',
+              letterSpacing: '-0.01em',
+            }}>
+            Member sign in
+          </motion.button>
         </motion.div>
       </div>
+
+      {typeof document !== 'undefined' &&
+        createPortal(
+          <AnimatePresence>
+            {signInModalOpen && (
+              <motion.div
+                key="sign-in-overlay"
+                role="presentation"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                onClick={closeSignInModal}
+                style={{
+                  position: 'fixed',
+                  inset: 0,
+                  zIndex: 200,
+                  background: 'rgba(6,4,12,0.72)',
+                  backdropFilter: 'blur(8px)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '1.25rem',
+                }}>
+                <motion.div
+                  key="sign-in-panel"
+                  role="dialog"
+                  aria-modal="true"
+                  aria-labelledby="sign-in-modal-title"
+                  initial={{ opacity: 0, y: 16, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 12, scale: 0.98 }}
+                  transition={{ duration: 0.28, ease: [0.23, 1, 0.32, 1] }}
+                  onClick={(e) => e.stopPropagation()}
+                  style={{
+                    position: 'relative',
+                    width: '100%',
+                    maxWidth: '400px',
+                    padding: '1.65rem 1.4rem',
+                    borderRadius: '20px',
+                    textAlign: 'left' as const,
+                    background: 'rgba(22,18,32,0.94)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    boxShadow: '0 24px 80px rgba(0,0,0,0.55)',
+                  }}>
+                  <button
+                    type="button"
+                    onClick={closeSignInModal}
+                    aria-label="Close"
+                    style={{
+                      position: 'absolute',
+                      top: 14,
+                      right: 14,
+                      width: 32,
+                      height: 32,
+                      borderRadius: '8px',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      background: 'rgba(255,255,255,0.05)',
+                      color: 'var(--text3)',
+                      fontSize: '1.1rem',
+                      lineHeight: 1,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}>
+                    ×
+                  </button>
+
+                  <p style={{ fontSize: '0.65rem', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text3)', margin: '0 0 6px' }}>
+                    Members
+                  </p>
+                  <h2 id="sign-in-modal-title" style={{ fontFamily: 'var(--font-display)', fontSize: '1.4rem', fontWeight: 700, color: 'var(--text)', margin: '0 2.25rem 0.35rem 0', letterSpacing: '-0.02em' }}>
+                    Sign in
+                  </h2>
+                  <p style={{ fontSize: '0.78rem', color: 'var(--text3)', marginBottom: '1rem', lineHeight: 1.5 }}>
+                    Use your account email and password, or Google.
+                  </p>
+
+                  <form onSubmit={(e) => void handleHomeSignIn(e)} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <StyledInput
+                      type="email"
+                      required
+                      autoComplete="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="your@email.com"
+                    />
+                    <StyledInput
+                      type="password"
+                      required
+                      autoComplete="current-password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Password"
+                    />
+                    {signInError && <p style={{ color: '#f87171', fontSize: '0.76rem' }}>{signInError}</p>}
+                    <GradientButton loading={signInLoading}>
+                      {signInLoading ? 'Signing in…' : 'Sign in'}
+                    </GradientButton>
+                  </form>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', margin: '1rem 0' }}>
+                    <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.07)' }} />
+                    <span style={{ fontSize: '0.7rem', color: 'var(--text3)', letterSpacing: '0.06em' }}>OR</span>
+                    <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.07)' }} />
+                  </div>
+
+                  <motion.button
+                    type="button"
+                    onClick={() => void handleHomeGoogle()}
+                    disabled={oauthLoading}
+                    whileHover={{ scale: 1.02, y: -1 }}
+                    whileTap={{ scale: 0.97 }}
+                    style={{
+                      width: '100%', height: '44px', borderRadius: '10px',
+                      background: '#fff', color: '#0c0a14',
+                      fontSize: '0.86rem', fontWeight: 600,
+                      border: 'none', cursor: oauthLoading ? 'not-allowed' : 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
+                      opacity: oauthLoading ? 0.6 : 1,
+                    }}>
+                    <GoogleIcon />
+                    Continue with Google
+                  </motion.button>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>,
+          document.body,
+        )}
 
     </main>
   )

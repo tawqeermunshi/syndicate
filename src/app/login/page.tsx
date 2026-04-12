@@ -160,17 +160,6 @@ function LoginInner() {
               <GoogleIcon />
               Continue with Google
             </motion.button>
-
-            <p style={{ fontSize: '0.78rem', color: 'var(--text3)', textAlign: 'center', marginTop: '1.2rem', lineHeight: 1.55 }}>
-              New here?{' '}
-              <Link href="/apply" style={{ color: 'rgba(167,139,250,0.85)', textDecoration: 'underline', textUnderlineOffset: '3px' }}>
-                Apply for access
-              </Link>
-              {' · '}
-              <Link href="/join" style={{ color: 'rgba(167,139,250,0.85)', textDecoration: 'underline', textUnderlineOffset: '3px' }}>
-                Join with an invite code
-              </Link>
-            </p>
           </div>
         </motion.div>
       </div>

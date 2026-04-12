@@ -190,7 +190,7 @@ export default function LandingClient() {
               }}>
               or
             </span>
-            <Link href="/login?join=invite" style={{ flex: '1 1 132px', textDecoration: 'none', minWidth: 0 }}>
+            <Link href="/join" style={{ flex: '1 1 132px', textDecoration: 'none', minWidth: 0 }}>
               <motion.div
                 whileHover={{ y: -1, borderColor: 'rgba(167,139,250,0.45)', background: 'rgba(124,58,237,0.1)' }}
                 whileTap={{ scale: 0.98 }}

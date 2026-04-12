@@ -254,7 +254,7 @@ export default function ApplyPage() {
             </Link>
             <br />
             Have an invite?{' '}
-            <Link href="/login?join=invite" style={{ color: 'rgba(167,139,250,0.7)', textDecoration: 'underline', textUnderlineOffset: '3px' }}>
+            <Link href="/join" style={{ color: 'rgba(167,139,250,0.7)', textDecoration: 'underline', textUnderlineOffset: '3px' }}>
               Verify your code and create an account
             </Link>
             {' '}— no application needed.

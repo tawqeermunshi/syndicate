@@ -13,7 +13,7 @@ export default async function InvitesPage() {
 
   const { data: invites } = await supabase
     .from('invites')
-    .select('*, used_by_profile:profiles!used_by(full_name, username)')
+    .select('*')
     .eq('created_by', user!.id)
     .order('created_at', { ascending: false })
 
@@ -58,9 +58,7 @@ export default async function InvitesPage() {
             {used.map(invite => (
               <div key={invite.id} className="border border-white/10 rounded-lg px-4 py-3 flex items-center justify-between opacity-50">
                 <code className="font-mono text-sm text-white/60 tracking-wider line-through">{invite.code}</code>
-                <span className="text-white/40 text-xs">
-                  used by {invite.used_by_profile?.full_name || 'someone'}
-                </span>
+                <span className="text-white/40 text-xs">used</span>
               </div>
             ))}
           </div>

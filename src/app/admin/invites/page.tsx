@@ -11,8 +11,7 @@ export default async function AdminInvitesPage() {
       .from('invites')
       .select(`
         *,
-        creator:profiles!created_by(full_name, username),
-        used_by_profile:profiles!used_by(full_name, username)
+        creator:profiles!created_by(full_name, username)
       `)
       .order('created_at', { ascending: false }),
     supabase
@@ -66,7 +65,7 @@ export default async function AdminInvitesPage() {
               <div key={invite.id} className="border border-white/10 rounded-lg px-4 py-3 flex items-center justify-between opacity-50">
                 <div className="flex items-center gap-3">
                   <code className="font-mono text-sm text-white/40 tracking-wider line-through">{invite.code}</code>
-                  <span className="text-white/30 text-xs">used by {invite.used_by_profile?.full_name ?? '—'}</span>
+                  <span className="text-white/30 text-xs">used</span>
                 </div>
                 <span className="text-white/20 text-xs">
                   {invite.used_at ? new Date(invite.used_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''}

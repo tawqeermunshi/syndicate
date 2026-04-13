@@ -1,3 +1,4 @@
+import type { SignalScoreInputs } from '@/lib/signalScore'
 import type { Profile } from '@/types'
 
 export const DEMO_PROFILES: Profile[] = [
@@ -110,6 +111,15 @@ export function isDemoProfileId(id: string): boolean {
 
 export function isDemoUsername(username: string): boolean {
   return DEMO_USERNAMES.has(username)
+}
+
+/** Synthetic engagement inputs for demo profiles (Signal v1). */
+export const DEMO_SIGNAL_INPUTS: Record<string, SignalScoreInputs> = {
+  'jibraan-mukhtar': { postsLast28: 2, signalsOnRecentPosts: 18, commentsFromOthersOnRecentPosts: 12 },
+  'ananya-rai': { postsLast28: 2, signalsOnRecentPosts: 14, commentsFromOthersOnRecentPosts: 9 },
+  'rahul-safdar': { postsLast28: 1, signalsOnRecentPosts: 22, commentsFromOthersOnRecentPosts: 6 },
+  'sana-khalid': { postsLast28: 2, signalsOnRecentPosts: 10, commentsFromOthersOnRecentPosts: 8 },
+  'ziyaan-mir': { postsLast28: 1, signalsOnRecentPosts: 16, commentsFromOthersOnRecentPosts: 5 },
 }
 
 export const DEMO_POSTS_BY_USERNAME: Record<string, { id: string; content: string; created_at: string }[]> = {

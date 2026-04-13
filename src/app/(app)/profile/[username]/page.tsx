@@ -4,8 +4,11 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import IntroRequestModal from '@/components/profile/IntroRequestModal'
+import SignalScoreBadge from '@/components/profile/SignalScoreBadge'
 import { Globe, Link2, X, MapPin, Building2 } from 'lucide-react'
-import { DEMO_POSTS_BY_USERNAME, DEMO_PROFILES } from '@/lib/demoProfiles'
+import { DEMO_POSTS_BY_USERNAME, DEMO_PROFILES, DEMO_SIGNAL_INPUTS } from '@/lib/demoProfiles'
+import { computeSignalScoreV1 } from '@/lib/signalScore'
+import { fetchSignalScoreInputs } from '@/lib/signalScoreQueries'
 
 const ROLE_LABELS = {
   founder: 'Founder',
@@ -59,6 +62,25 @@ export default async function ProfilePage({
         .order('created_at', { ascending: false })
         .limit(5)
 
+  const signalBreakdown = isDemoProfile
+    ? computeSignalScoreV1(DEMO_SIGNAL_INPUTS[username] ?? {
+        postsLast28: 0,
+        signalsOnRecentPosts: 0,
+        commentsFromOthersOnRecentPosts: 0,
+      })
+    : await (async () => {
+        try {
+          const raw = await fetchSignalScoreInputs(supabase, profile.id)
+          return computeSignalScoreV1(raw)
+        } catch {
+          return computeSignalScoreV1({
+            postsLast28: 0,
+            signalsOnRecentPosts: 0,
+            commentsFromOthersOnRecentPosts: 0,
+          })
+        }
+      })()
+
   return (
     <div className="max-w-2xl mx-auto px-6 py-8">
       {/* Header card */}
@@ -96,6 +118,7 @@ export default async function ProfilePage({
                   </span>
                 )}
               </div>
+              <SignalScoreBadge breakdown={signalBreakdown} />
             </div>
           </div>
           {!isOwnProfile && (

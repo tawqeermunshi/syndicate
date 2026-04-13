@@ -113,7 +113,7 @@ export function isDemoUsername(username: string): boolean {
   return DEMO_USERNAMES.has(username)
 }
 
-/** Synthetic engagement inputs for demo profiles (Signal v1). */
+/** Synthetic engagement inputs for demo profiles (Signal). */
 export const DEMO_SIGNAL_INPUTS: Record<string, SignalScoreInputs> = {
   'jibraan-mukhtar': { postsLast28: 2, signalsOnRecentPosts: 18, commentsFromOthersOnRecentPosts: 12 },
   'ananya-rai': { postsLast28: 2, signalsOnRecentPosts: 14, commentsFromOthersOnRecentPosts: 9 },

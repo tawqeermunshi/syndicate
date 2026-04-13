@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Info } from 'lucide-react'
 import type { SignalScoreBreakdown } from '@/lib/signalScore'
-import { SIGNAL_SCORE_V1_RULES } from '@/lib/signalScore'
+import { SIGNAL_SCORE_RULES } from '@/lib/signalScore'
 import {
   Dialog,
   DialogContent,
@@ -46,7 +46,7 @@ export default function SignalScoreBadge({ breakdown }: Props) {
         <DialogHeader>
           <DialogTitle className="text-white">What is Signal?</DialogTitle>
           <DialogDescription className="text-white/50">
-            Signal v1 estimates how much you are contributing and how much trusted members recognize that contribution.
+            Signal estimates how much you are contributing and how much trusted members recognize that contribution.
             It is not a popularity score.
           </DialogDescription>
         </DialogHeader>
@@ -74,9 +74,9 @@ export default function SignalScoreBadge({ breakdown }: Props) {
         </div>
 
         <div className="space-y-2 text-xs text-white/45 leading-relaxed">
-          <p className="text-white/55 text-[11px] uppercase tracking-widest">How v1 is calculated</p>
+          <p className="text-white/55 text-[11px] uppercase tracking-widest">How Signal is calculated</p>
           <ul className="list-disc space-y-1.5 pl-4">
-            {SIGNAL_SCORE_V1_RULES.map((rule) => (
+            {SIGNAL_SCORE_RULES.map((rule) => (
               <li key={rule}>{rule}</li>
             ))}
           </ul>

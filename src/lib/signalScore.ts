@@ -1,5 +1,5 @@
 /**
- * Signal score v1 — transparent, capped components (rolling 28 days of posts).
+ * Signal score — transparent, capped components (rolling 28 days of posts).
  * Tune weights here only; keep the profile “What is Signal?” copy aligned.
  */
 export const SIGNAL_POST_WINDOW_DAYS = 28
@@ -43,10 +43,10 @@ export function computeSignalScoreV1(input: SignalScoreInputs): SignalScoreBreak
   }
 }
 
-export const SIGNAL_SCORE_V1_RULES = [
+export const SIGNAL_SCORE_RULES = [
   `Rolling window: last ${SIGNAL_POST_WINDOW_DAYS} days of your published posts.`,
   `Posting: up to ${POST_POINT_CAP} posts × ${POINTS_PER_POST} pts (steady cadence, not daily spam).`,
   `Recognition: “Signal” reactions on those posts — up to ${SIGNAL_POINT_CAP} × ${POINTS_PER_SIGNAL} pts.`,
   `Conversation: comments from other members on those posts — up to ${COMMENT_POINT_CAP} × ${POINTS_PER_COMMENT} pts (self-comments don’t count).`,
-  'We ignore raw views/downloads. v1 is intentionally simple; weights will evolve.',
+  'We ignore raw views/downloads. This model is intentionally simple; weights will evolve.',
 ] as const

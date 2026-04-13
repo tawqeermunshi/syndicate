@@ -19,6 +19,8 @@ export default async function InvitesPage() {
 
   const used = (invites || []).filter(i => i.used_by)
   const unused = (invites || []).filter(i => !i.used_by)
+  const slotsLimit = profile?.invite_slots ?? 0
+  const slotsRemaining = Math.max(slotsLimit - unused.length, 0)
 
   return (
     <div className="max-w-2xl mx-auto px-6 py-8">
@@ -26,11 +28,11 @@ export default async function InvitesPage() {
         <div>
           <h1 className="text-xl font-semibold mb-1">Invites</h1>
           <p className="text-white/40 text-sm">
-            You have <span className="text-white font-medium">{profile?.invite_slots ?? 0}</span> invite{profile?.invite_slots !== 1 ? 's' : ''} remaining.
+            You have <span className="text-white font-medium">{slotsRemaining}</span> invite{slotsRemaining !== 1 ? 's' : ''} remaining.
             Only invite people you'd personally vouch for.
           </p>
         </div>
-        <GenerateInviteButton slotsRemaining={profile?.invite_slots ?? 0} />
+        <GenerateInviteButton slotsRemaining={slotsRemaining} />
       </div>
 
       {/* Unused invites */}

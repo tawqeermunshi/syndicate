@@ -19,16 +19,57 @@ const CATEGORIES: { value: PostCategory; label: string; color: string }[] = [
 export default function PostComposer({ profile }: { profile: Profile }) {
   const [open, setOpen] = useState(false)
   const [content, setContent] = useState('')
+  const [imageUrl, setImageUrl] = useState('')
+  const [videoUrl, setVideoUrl] = useState('')
+  const [postError, setPostError] = useState('')
   const [category, setCategory] = useState<PostCategory>('building')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
 
+  function normalizeMediaUrl(value: string): string | null {
+    const v = value.trim()
+    if (!v) return null
+    try {
+      const url = new URL(v)
+      if (url.protocol !== 'http:' && url.protocol !== 'https:') return null
+      return url.toString()
+    } catch {
+      return null
+    }
+  }
+
   async function handlePost() {
     if (!content.trim()) return
+    setPostError('')
+    const image = normalizeMediaUrl(imageUrl)
+    const video = normalizeMediaUrl(videoUrl)
+    if (imageUrl.trim() && !image) {
+      setPostError('Image URL must be a valid http(s) URL.')
+      return
+    }
+    if (videoUrl.trim() && !video) {
+      setPostError('Video URL must be a valid http(s) URL.')
+      return
+    }
+    if (image && video) {
+      setPostError('Add either image or video (not both) on one post.')
+      return
+    }
     setLoading(true)
     const supabase = createClient()
-    await supabase.from('posts').insert({ author_id: profile.id, content: content.trim(), category })
-    setContent(''); setOpen(false); setLoading(false)
+    await supabase.from('posts').insert({
+      author_id: profile.id,
+      content: content.trim(),
+      category,
+      image_url: image,
+      video_url: video,
+    })
+    setContent('')
+    setImageUrl('')
+    setVideoUrl('')
+    setPostError('')
+    setOpen(false)
+    setLoading(false)
     router.refresh()
   }
 
@@ -80,6 +121,31 @@ export default function PostComposer({ profile }: { profile: Profile }) {
                 className="w-full bg-transparent text-sm leading-relaxed resize-none outline-none"
                 style={{ color: 'rgba(255,255,255,0.85)', caretColor: '#a78bfa' }}
               />
+              <div className="space-y-2">
+                <input
+                  value={imageUrl}
+                  onChange={e => setImageUrl(e.target.value)}
+                  placeholder="Image URL (optional)"
+                  className="w-full rounded-lg px-3 py-2 text-xs outline-none"
+                  style={{
+                    background: 'rgba(255,255,255,0.03)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    color: 'rgba(255,255,255,0.75)',
+                  }}
+                />
+                <input
+                  value={videoUrl}
+                  onChange={e => setVideoUrl(e.target.value)}
+                  placeholder="Video URL (optional)"
+                  className="w-full rounded-lg px-3 py-2 text-xs outline-none"
+                  style={{
+                    background: 'rgba(255,255,255,0.03)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    color: 'rgba(255,255,255,0.75)',
+                  }}
+                />
+              </div>
+              {postError && <p className="text-xs text-red-300/90">{postError}</p>}
               <div className="flex items-center justify-between">
                 <Select value={category} onValueChange={v => setCategory(v as PostCategory)}>
                   <SelectTrigger className="w-40 h-7 text-xs focus:ring-0 focus:ring-offset-0"

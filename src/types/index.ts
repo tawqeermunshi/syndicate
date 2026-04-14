@@ -70,6 +70,8 @@ export interface Post {
   author_id: string
   category: PostCategory
   content: string
+  image_url?: string
+  video_url?: string
   title?: string
   link_url?: string
   is_published: boolean

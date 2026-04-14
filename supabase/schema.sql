@@ -115,6 +115,8 @@ create table posts (
   title text,
   link_url text,
   link_preview jsonb,                    -- {title, description, image}
+  image_url text,
+  video_url text,
 
   -- Visibility
   is_published boolean not null default true,

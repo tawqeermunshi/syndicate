@@ -188,6 +188,26 @@ export default function PostCard({ post, currentUserId }: { post: Post; currentU
       <p className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: 'rgba(255,255,255,0.75)' }}>
         {post.content}
       </p>
+      {post.image_url && (
+        <div className="mt-3 overflow-hidden rounded-xl border border-white/10 bg-black/20">
+          <img
+            src={post.image_url}
+            alt="Post media"
+            className="max-h-[420px] w-full object-cover"
+            loading="lazy"
+          />
+        </div>
+      )}
+      {post.video_url && (
+        <div className="mt-3 overflow-hidden rounded-xl border border-white/10 bg-black/20">
+          <video
+            src={post.video_url}
+            controls
+            preload="metadata"
+            className="max-h-[420px] w-full"
+          />
+        </div>
+      )}
 
       {/* Actions */}
       <div className="flex items-center gap-5 mt-4 pt-3" style={{ borderTop: '1px solid rgba(255,255,255,0.04)' }}>

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRef } from 'react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import type { Profile, PostCategory } from '@/types'
@@ -19,58 +20,80 @@ const CATEGORIES: { value: PostCategory; label: string; color: string }[] = [
 export default function PostComposer({ profile }: { profile: Profile }) {
   const [open, setOpen] = useState(false)
   const [content, setContent] = useState('')
-  const [imageUrl, setImageUrl] = useState('')
-  const [videoUrl, setVideoUrl] = useState('')
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [videoFile, setVideoFile] = useState<File | null>(null)
   const [postError, setPostError] = useState('')
   const [category, setCategory] = useState<PostCategory>('building')
   const [loading, setLoading] = useState(false)
+  const imageInputRef = useRef<HTMLInputElement>(null)
+  const videoInputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
 
-  function normalizeMediaUrl(value: string): string | null {
-    const v = value.trim()
-    if (!v) return null
-    try {
-      const url = new URL(v)
-      if (url.protocol !== 'http:' && url.protocol !== 'https:') return null
-      return url.toString()
-    } catch {
-      return null
-    }
+  function sanitizeFileName(name: string): string {
+    return name.replace(/[^a-zA-Z0-9._-]/g, '-')
   }
 
   async function handlePost() {
     if (!content.trim()) return
     setPostError('')
-    const image = normalizeMediaUrl(imageUrl)
-    const video = normalizeMediaUrl(videoUrl)
-    if (imageUrl.trim() && !image) {
-      setPostError('Image URL must be a valid http(s) URL.')
-      return
-    }
-    if (videoUrl.trim() && !video) {
-      setPostError('Video URL must be a valid http(s) URL.')
-      return
-    }
-    if (image && video) {
-      setPostError('Add either image or video (not both) on one post.')
+    if (imageFile && videoFile) {
+      setPostError('Attach either one image or one video per post.')
       return
     }
     setLoading(true)
     const supabase = createClient()
-    await supabase.from('posts').insert({
+    let imageUrl: string | null = null
+    let videoUrl: string | null = null
+
+    try {
+      if (imageFile) {
+        const imagePath = `${profile.id}/${Date.now()}-${sanitizeFileName(imageFile.name)}`
+        const { error: uploadErr } = await supabase.storage
+          .from('post-media')
+          .upload(imagePath, imageFile, { upsert: false })
+        if (uploadErr) {
+          setPostError(uploadErr.message.includes('post-media')
+            ? 'Media bucket is not configured yet. Run the latest Supabase migration and try again.'
+            : `Could not upload image: ${uploadErr.message}`)
+          setLoading(false)
+          return
+        }
+        imageUrl = supabase.storage.from('post-media').getPublicUrl(imagePath).data.publicUrl
+      }
+
+      if (videoFile) {
+        const videoPath = `${profile.id}/${Date.now()}-${sanitizeFileName(videoFile.name)}`
+        const { error: uploadErr } = await supabase.storage
+          .from('post-media')
+          .upload(videoPath, videoFile, { upsert: false })
+        if (uploadErr) {
+          setPostError(uploadErr.message.includes('post-media')
+            ? 'Media bucket is not configured yet. Run the latest Supabase migration and try again.'
+            : `Could not upload video: ${uploadErr.message}`)
+          setLoading(false)
+          return
+        }
+        videoUrl = supabase.storage.from('post-media').getPublicUrl(videoPath).data.publicUrl
+      }
+
+      await supabase.from('posts').insert({
       author_id: profile.id,
       content: content.trim(),
       category,
-      image_url: image,
-      video_url: video,
-    })
-    setContent('')
-    setImageUrl('')
-    setVideoUrl('')
-    setPostError('')
-    setOpen(false)
-    setLoading(false)
-    router.refresh()
+      image_url: imageUrl,
+      video_url: videoUrl,
+      })
+      setContent('')
+      setImageFile(null)
+      setVideoFile(null)
+      setPostError('')
+      setOpen(false)
+      setLoading(false)
+      router.refresh()
+    } catch {
+      setPostError('Could not create post. Please try again.')
+      setLoading(false)
+    }
   }
 
   return (
@@ -108,6 +131,9 @@ export default function PostComposer({ profile }: { profile: Profile }) {
                   onClick={() => {
                     setOpen(false)
                     setContent('')
+                    setImageFile(null)
+                    setVideoFile(null)
+                    setPostError('')
                   }}
                 />
               </div>
@@ -115,7 +141,15 @@ export default function PostComposer({ profile }: { profile: Profile }) {
                 autoFocus
                 value={content}
                 onChange={e => setContent(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Escape') { setOpen(false); setContent('') } }}
+                onKeyDown={e => {
+                  if (e.key === 'Escape') {
+                    setOpen(false)
+                    setContent('')
+                    setImageFile(null)
+                    setVideoFile(null)
+                    setPostError('')
+                  }
+                }}
                 placeholder="Share what you're building, raising, or ask for feedback..."
                 rows={4}
                 className="w-full bg-transparent text-sm leading-relaxed resize-none outline-none"
@@ -123,27 +157,78 @@ export default function PostComposer({ profile }: { profile: Profile }) {
               />
               <div className="space-y-2">
                 <input
-                  value={imageUrl}
-                  onChange={e => setImageUrl(e.target.value)}
-                  placeholder="Image URL (optional)"
-                  className="w-full rounded-lg px-3 py-2 text-xs outline-none"
-                  style={{
-                    background: 'rgba(255,255,255,0.03)',
-                    border: '1px solid rgba(255,255,255,0.08)',
-                    color: 'rgba(255,255,255,0.75)',
+                  ref={imageInputRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  className="hidden"
+                  onChange={e => {
+                    const f = e.target.files?.[0] || null
+                    setImageFile(f)
+                    if (f) setVideoFile(null)
                   }}
                 />
                 <input
-                  value={videoUrl}
-                  onChange={e => setVideoUrl(e.target.value)}
-                  placeholder="Video URL (optional)"
-                  className="w-full rounded-lg px-3 py-2 text-xs outline-none"
-                  style={{
-                    background: 'rgba(255,255,255,0.03)',
-                    border: '1px solid rgba(255,255,255,0.08)',
-                    color: 'rgba(255,255,255,0.75)',
+                  ref={videoInputRef}
+                  type="file"
+                  accept="video/*"
+                  capture="environment"
+                  className="hidden"
+                  onChange={e => {
+                    const f = e.target.files?.[0] || null
+                    setVideoFile(f)
+                    if (f) setImageFile(null)
                   }}
                 />
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => imageInputRef.current?.click()}
+                    className="rounded-lg border px-3 py-1.5 text-xs"
+                    style={{
+                      borderColor: 'rgba(255,255,255,0.14)',
+                      color: 'rgba(255,255,255,0.65)',
+                      background: 'rgba(255,255,255,0.03)',
+                    }}
+                  >
+                    Add image
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => videoInputRef.current?.click()}
+                    className="rounded-lg border px-3 py-1.5 text-xs"
+                    style={{
+                      borderColor: 'rgba(255,255,255,0.14)',
+                      color: 'rgba(255,255,255,0.65)',
+                      background: 'rgba(255,255,255,0.03)',
+                    }}
+                  >
+                    Add video
+                  </button>
+                  {(imageFile || videoFile) && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setImageFile(null)
+                        setVideoFile(null)
+                      }}
+                      className="rounded-lg border px-3 py-1.5 text-xs"
+                      style={{
+                        borderColor: 'rgba(248,113,113,0.25)',
+                        color: 'rgba(248,113,113,0.9)',
+                        background: 'rgba(248,113,113,0.05)',
+                      }}
+                    >
+                      Remove media
+                    </button>
+                  )}
+                </div>
+                {imageFile && (
+                  <p className="text-xs text-white/45">Image selected: {imageFile.name}</p>
+                )}
+                {videoFile && (
+                  <p className="text-xs text-white/45">Video selected: {videoFile.name}</p>
+                )}
               </div>
               {postError && <p className="text-xs text-red-300/90">{postError}</p>}
               <div className="flex items-center justify-between">
@@ -164,7 +249,13 @@ export default function PostComposer({ profile }: { profile: Profile }) {
                 </Select>
 
                 <div className="flex gap-2">
-                  <button onClick={() => { setOpen(false); setContent('') }}
+                  <button onClick={() => {
+                    setOpen(false)
+                    setContent('')
+                    setImageFile(null)
+                    setVideoFile(null)
+                    setPostError('')
+                  }}
                     className="px-3 py-1.5 text-xs transition-colors rounded-lg"
                     style={{ color: 'rgba(255,255,255,0.3)' }}
                     onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.6)')}

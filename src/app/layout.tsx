@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Cursor from '@/components/Cursor'
 import { Geist, Geist_Mono, Playfair_Display, Outfit } from "next/font/google";
 import "./globals.css";
 
@@ -28,7 +27,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${playfair.variable} ${outfit.variable} ${geistMono.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
-        <Cursor />
         {children}
       </body>
     </html>

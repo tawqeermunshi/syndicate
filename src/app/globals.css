@@ -146,7 +146,8 @@ body::after {
   border-radius: 999px;
   background: linear-gradient(135deg, var(--violet2), var(--ember2));
   box-shadow: 0 0 16px rgba(124,58,237,0.45);
-  transition: opacity 0.15s ease, transform 0.1s ease;
+  /* Never animate transform here; JS updates every frame and transition adds click mismatch lag. */
+  transition: opacity 0.12s ease;
 }
 
 #cursor-ring {
@@ -162,7 +163,7 @@ body::after {
     height 0.2s ease,
     margin 0.2s ease,
     border-color 0.2s ease,
-    opacity 0.2s ease;
+    opacity 0.12s ease;
 }
 
 body.custom-cursor-visible #cursor-dot,

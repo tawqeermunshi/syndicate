@@ -38,7 +38,6 @@ export default function Sidebar({ profile }: { profile: Profile }) {
       style={{
         background: 'rgba(7,5,15,0.85)',
         borderRight: '1px solid rgba(139,92,246,0.10)',
-        backdropFilter: 'blur(20px)',
       }}>
 
       {/* Logo */}

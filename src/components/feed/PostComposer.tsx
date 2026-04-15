@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { useRef } from 'react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import type { Profile, PostCategory } from '@/types'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -76,13 +75,19 @@ export default function PostComposer({ profile }: { profile: Profile }) {
         videoUrl = supabase.storage.from('post-media').getPublicUrl(videoPath).data.publicUrl
       }
 
-      await supabase.from('posts').insert({
-      author_id: profile.id,
-      content: content.trim(),
-      category,
-      image_url: imageUrl,
-      video_url: videoUrl,
+      const chosenCategory = category
+      const { error: postErr } = await supabase.from('posts').insert({
+        author_id: profile.id,
+        content: content.trim(),
+        category: chosenCategory,
+        image_url: imageUrl,
+        video_url: videoUrl,
       })
+      if (postErr) {
+        setPostError(`Could not create post: ${postErr.message}`)
+        setLoading(false)
+        return
+      }
       setContent('')
       setImageFile(null)
       setVideoFile(null)
@@ -232,21 +237,26 @@ export default function PostComposer({ profile }: { profile: Profile }) {
               </div>
               {postError && <p className="text-xs text-red-300/90">{postError}</p>}
               <div className="flex items-center justify-between">
-                <Select value={category} onValueChange={v => setCategory(v as PostCategory)}>
-                  <SelectTrigger className="w-40 h-7 text-xs focus:ring-0 focus:ring-offset-0"
-                    style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.6)' }}>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent style={{ background: '#0f0d1f', border: '1px solid rgba(255,255,255,0.08)' }}>
-                    {CATEGORIES.map(c => (
-                      <SelectItem key={c.value} value={c.value}
-                        className="text-xs focus:bg-white/5"
-                        style={{ color: c.color }}>
+                <div className="flex flex-wrap gap-1.5">
+                  {CATEGORIES.map((c) => {
+                    const active = category === c.value
+                    return (
+                      <button
+                        key={c.value}
+                        type="button"
+                        onClick={() => setCategory(c.value)}
+                        className="rounded-full border px-2.5 py-1 text-[11px] font-medium transition-all"
+                        style={{
+                          color: active ? c.color : 'rgba(255,255,255,0.45)',
+                          borderColor: active ? `${c.color}55` : 'rgba(255,255,255,0.10)',
+                          background: active ? `${c.color}1f` : 'rgba(255,255,255,0.02)',
+                        }}
+                      >
                         {c.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                      </button>
+                    )
+                  })}
+                </div>
 
                 <div className="flex gap-2">
                   <button onClick={() => {

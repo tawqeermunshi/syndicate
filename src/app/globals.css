@@ -112,8 +112,20 @@ body::after {
    CUSTOM CURSOR (desktop only)
 ══════════════════════════════════════ */
 @media (pointer: fine) {
+  /* Hard-disable custom cursor globally until interaction latency is fully resolved. */
+  body,
+  body.has-custom-cursor,
+  body.has-custom-cursor a,
+  body.has-custom-cursor button,
+  body.has-custom-cursor input,
+  body.has-custom-cursor textarea,
+  body.has-custom-cursor select,
+  body.has-custom-cursor [role='button'],
+  body.has-custom-cursor [data-cursor='interactive'] {
+    cursor: auto !important;
+  }
   body.has-custom-cursor {
-    cursor: none;
+    cursor: auto !important;
   }
   body.has-custom-cursor a,
   body.has-custom-cursor button,
@@ -122,12 +134,13 @@ body::after {
   body.has-custom-cursor select,
   body.has-custom-cursor [role='button'],
   body.has-custom-cursor [data-cursor='interactive'] {
-    cursor: none;
+    cursor: auto !important;
   }
 }
 
 #cursor-dot,
 #cursor-ring {
+  display: none !important;
   position: fixed;
   top: 0;
   left: 0;

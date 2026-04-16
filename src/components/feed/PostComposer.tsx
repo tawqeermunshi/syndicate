@@ -16,17 +16,24 @@ const CATEGORIES: { value: PostCategory; label: string; color: string }[] = [
   { value: 'feedback_wanted', label: 'Feedback wanted', color: '#fb923c' },
 ]
 
-export default function PostComposer({ profile }: { profile: Profile }) {
+export default function PostComposer({
+  profile,
+  activeCategory,
+}: {
+  profile: Profile
+  activeCategory?: string
+}) {
   const [open, setOpen] = useState(false)
   const [content, setContent] = useState('')
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [videoFile, setVideoFile] = useState<File | null>(null)
   const [postError, setPostError] = useState('')
-  const [category, setCategory] = useState<PostCategory>('building')
   const [loading, setLoading] = useState(false)
   const imageInputRef = useRef<HTMLInputElement>(null)
   const videoInputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
+  const category = CATEGORIES.find((c) => c.value === activeCategory)?.value as PostCategory | undefined
+  const categoryLabel = CATEGORIES.find((c) => c.value === category)?.label
 
   function sanitizeFileName(name: string): string {
     return name.replace(/[^a-zA-Z0-9._-]/g, '-')
@@ -35,6 +42,10 @@ export default function PostComposer({ profile }: { profile: Profile }) {
   async function handlePost() {
     if (!content.trim()) return
     setPostError('')
+    if (!category) {
+      setPostError('Pick a feed tab (Building, Raising, Hiring, Feedback) before posting.')
+      return
+    }
     if (imageFile && videoFile) {
       setPostError('Attach either one image or one video per post.')
       return
@@ -160,6 +171,9 @@ export default function PostComposer({ profile }: { profile: Profile }) {
                 className="w-full bg-transparent text-sm leading-relaxed resize-none outline-none"
                 style={{ color: 'rgba(255,255,255,0.85)', caretColor: '#a78bfa' }}
               />
+              {categoryLabel && (
+                <p className="text-xs text-white/45">Posting under: <span className="text-white/70">{categoryLabel}</span></p>
+              )}
               <div className="space-y-2">
                 <input
                   ref={imageInputRef}
@@ -237,26 +251,7 @@ export default function PostComposer({ profile }: { profile: Profile }) {
               </div>
               {postError && <p className="text-xs text-red-300/90">{postError}</p>}
               <div className="flex items-center justify-between">
-                <div className="flex flex-wrap gap-1.5">
-                  {CATEGORIES.map((c) => {
-                    const active = category === c.value
-                    return (
-                      <button
-                        key={c.value}
-                        type="button"
-                        onClick={() => setCategory(c.value)}
-                        className="rounded-full border px-2.5 py-1 text-[11px] font-medium transition-all"
-                        style={{
-                          color: active ? c.color : 'rgba(255,255,255,0.45)',
-                          borderColor: active ? `${c.color}55` : 'rgba(255,255,255,0.10)',
-                          background: active ? `${c.color}1f` : 'rgba(255,255,255,0.02)',
-                        }}
-                      >
-                        {c.label}
-                      </button>
-                    )
-                  })}
-                </div>
+                <div />
 
                 <div className="flex gap-2">
                   <button onClick={() => {

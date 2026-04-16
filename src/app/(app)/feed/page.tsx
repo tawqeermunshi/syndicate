@@ -78,7 +78,7 @@ export default async function FeedPage({
         <FeedFilter active={category} />
       </div>
 
-      <PostComposer profile={profile} />
+      <PostComposer profile={profile} activeCategory={category} />
 
       <div className="space-y-4 mt-6">
         {enrichedPosts.length === 0 ? (
